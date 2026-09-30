@@ -11,6 +11,7 @@ export type SignUpExtras = {
   sex: string;
   diabetesType: string;
   yearsWithDiabetes: string;
+  phone: string;
 };
 
 /** Conclui o cadastro: salva o aceite dos termos (LGPD) e os dados opcionais de saúde. */
@@ -26,6 +27,7 @@ export async function completeSignup(extras: SignUpExtras) {
     sex: d?.sex ?? null,
     diabetesType: d?.diabetesType ?? null,
     diagnosisYear: yearsToDiagnosisYear(d?.yearsWithDiabetes ?? null),
+    phone: d?.phone ?? null,
   };
   await db
     .insert(profiles)

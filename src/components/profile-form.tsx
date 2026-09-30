@@ -4,6 +4,7 @@
 import { updateProfile, type ProfileState } from "@/app/(app)/perfil/actions";
 import { useFormAction } from "@/lib/use-form-action";
 import { HealthFields } from "@/components/health-fields";
+import { PhoneField } from "@/components/phone-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 type Props = {
   name: string;
   email: string;
+  phone: string;
   birthDate: string | null;
   sex: string | null;
   diabetesType: string | null;
@@ -35,6 +37,11 @@ export function ProfileForm(p: Props) {
         <Label htmlFor="email" className="text-base">E-mail</Label>
         <Input id="email" value={p.email} className="h-12 text-base" disabled readOnly />
       </div>
+      <PhoneField
+        defaultValue={p.phone}
+        optional
+        purpose="Para avisos importantes do app, em breve. Você pode apagar quando quiser."
+      />
       <HealthFields
         defaults={{ birthDate: p.birthDate, sex: p.sex, diabetesType: p.diabetesType, yearsWithDiabetes: p.yearsWithDiabetes }}
       />

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePhone } from "./phone";
 import { MAX_YEARS_WITH_DIABETES } from "./profile-utils";
 
 export const signUpSchema = z.object({
@@ -10,6 +11,28 @@ export const signUpSchema = z.object({
 export const signInSchema = signUpSchema.pick({ email: true }).extend({
   password: z.string().min(1, "Informe a senha"),
 });
+
+// Celular: valida com mensagem específica e guarda em E.164.
+const phoneCheck = (required: boolean) =>
+  z
+    .string()
+    .trim()
+    .superRefine((v, ctx) => {
+      if (v === "" && !required) return;
+      const r = normalizePhone(v);
+      if (!r.ok) ctx.addIssue({ code: "custom", message: r.message });
+    });
+const toE164 = (v: string) => {
+  const r = normalizePhone(v);
+  return r.ok ? r.e164 : null;
+};
+/** Obrigatório (cadastro): devolve sempre o número em E.164. */
+export const phoneRequired = phoneCheck(true).transform((v) => toE164(v) as string);
+/** Opcional (perfil): vazio vira null. */
+export const phoneOptional = phoneCheck(false).optional().transform((v) => (v ? toE164(v) : null));
+
+/** Primeiro passo do cadastro: acesso + celular. */
+export const accountStepSchema = signUpSchema.extend({ phone: phoneRequired });
 
 export const DIABETES_TYPES = ["tipo1", "tipo2", "gestacional", "outro", "nao_informado"] as const;
 export const SEXES = ["feminino", "masculino", "nao_informado"] as const;
@@ -44,9 +67,10 @@ export const healthFieldsSchema = z.object({
 });
 
 /** Campos extras do cadastro (vêm depois de nome, e-mail e senha). */
-export const signUpExtrasSchema = healthFieldsSchema;
+export const signUpExtrasSchema = healthFieldsSchema.extend({ phone: phoneOptional });
 
 export const profileSchema = healthFieldsSchema.extend({
+  phone: phoneOptional,
   name: z.string().trim().min(2, "Informe seu nome").max(80),
   fontScale: z.coerce.number().int().min(100).max(150),
   alertEmailSelf: z.string().optional().transform((v) => v === "on"),

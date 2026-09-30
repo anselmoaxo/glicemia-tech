@@ -16,15 +16,15 @@ export async function updateProfile(_: ProfileState, formData: FormData): Promis
   const parsed = profileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { name, birthDate, sex, diabetesType, yearsWithDiabetes, fontScale, alertEmailSelf, alertEmailFamily } = parsed.data;
+  const { name, phone, birthDate, sex, diabetesType, yearsWithDiabetes, fontScale, alertEmailSelf, alertEmailFamily } = parsed.data;
   const diagnosisYear = yearsToDiagnosisYear(yearsWithDiabetes);
   await db.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, user.id));
   await db
     .insert(profiles)
-    .values({ userId: user.id, birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily })
+    .values({ userId: user.id, phone, birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily })
     .onConflictDoUpdate({
       target: profiles.userId,
-      set: { birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily, updatedAt: new Date() },
+      set: { phone, birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily, updatedAt: new Date() },
     });
 
   revalidatePath("/", "layout");

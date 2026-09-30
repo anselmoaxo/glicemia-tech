@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Recaptcha, type RecaptchaHandle } from "@/components/recaptcha";
 import { completeSignup } from "@/app/(auth)/actions";
 import { AboutFields, DiabetesFields } from "@/components/health-fields";
+import { PhoneField } from "@/components/phone-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,8 @@ import { authClient } from "@/lib/auth-client";
 import { CAPTCHA_REQUIRED, signupErrorMessage } from "@/lib/auth-errors";
 import { CAPTCHA_HEADER } from "@/lib/captcha";
 import { DIABETES_OPTIONS, SEX_OPTIONS } from "@/lib/profile-utils";
-import { healthFieldsSchema, signUpSchema } from "@/lib/validation";
+import { normalizePhone, formatPhoneDisplay } from "@/lib/phone";
+import { accountStepSchema, healthFieldsSchema, signUpSchema } from "@/lib/validation";
 
 const STEPS = [
   { title: "Crie seu acesso", hint: "Usaremos o e-mail e a senha para você entrar." },
@@ -54,7 +56,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
 
   function validate(s: number): string | null {
     const v = values();
-    const schema = [signUpSchema, aboutSchema, diabetesSchema][s];
+    const schema = [accountStepSchema, aboutSchema, diabetesSchema][s];
     if (!schema) return null;
     const r = schema.safeParse(v);
     return r.success ? null : r.error.issues[0].message;
@@ -70,6 +72,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
       setSummary([
         ["Nome", v.name],
         ["E-mail", v.email],
+        ["Celular", (() => { const p = normalizePhone(v.phone ?? ""); return p.ok ? formatPhoneDisplay(p.e164) : "Não informado"; })()],
         ["Nascimento", v.birthDate ? v.birthDate.split("-").reverse().join("/") : "Não informado"],
         ["Sexo", label(SEX_OPTIONS, v.sex)],
         ["Tipo de diabetes", label(DIABETES_OPTIONS, v.diabetesType)],
@@ -108,6 +111,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
       sex: v.sex ?? "nao_informado",
       diabetesType: v.diabetesType ?? "nao_informado",
       yearsWithDiabetes: v.yearsWithDiabetes ?? "",
+      phone: (() => { const p = normalizePhone(v.phone ?? ""); return p.ok ? p.e164 : ""; })(),
     });
     setPending(false);
     router.replace(next);
@@ -121,7 +125,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
   }
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
+    <form ref={formRef} onSubmit={onSubmit} onChange={() => setError(null)} noValidate className="flex flex-col gap-6">
       {/* Esteira de progresso */}
       <div>
         <p className="text-base font-semibold text-muted-foreground">
@@ -161,6 +165,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
           <Label htmlFor="password" className="text-base">Senha (mínimo 8 caracteres)</Label>
           <Input id="password" name="password" type="password" autoComplete="new-password" className="h-12 text-base" />
         </div>
+        <PhoneField id="w-phone" purpose="Usaremos só para avisos importantes do app, em breve. Sem propaganda." />
       </div>
 
       <div hidden={step !== 1} className="flex flex-col gap-5">
@@ -184,7 +189,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
         <label className="flex items-start gap-3 text-base">
           <input type="checkbox" name="consent" className="mt-1 size-6 shrink-0" />
           <span>
-            Concordo com o tratamento dos meus dados de saúde para o funcionamento do app, conforme a LGPD. Posso
+            Concordo com o tratamento dos meus dados de saúde e do meu celular para o funcionamento do app e para o envio de avisos, conforme a LGPD. Posso
             excluir minha conta e meus dados a qualquer momento no Perfil.
           </span>
         </label>

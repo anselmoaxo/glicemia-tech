@@ -36,6 +36,7 @@ async function fillStep1(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("Nome"), "Maria Silva");
   await user.type(screen.getByLabelText("E-mail"), "maria@example.com");
   await user.type(screen.getByLabelText(/Senha/), "senha-segura-1");
+  await user.type(screen.getByLabelText(/Celular com DDD/), "11912345678");
 }
 
 describe("SignupWizard", () => {
@@ -70,7 +71,7 @@ describe("SignupWizard", () => {
     await user.click(screen.getByRole("button", { name: "Continuar" }));
 
     expect(heading()).toBe("Quase lá");
-    for (const v of ["Maria Silva", "maria@example.com", "10/03/1960", "Feminino", "Tipo 2", "8 anos"]) {
+    for (const v of ["Maria Silva", "maria@example.com", "(11) 91234-5678", "10/03/1960", "Feminino", "Tipo 2", "8 anos"]) {
       expect(summary().getByText(v)).toBeTruthy();
     }
 
@@ -92,6 +93,7 @@ describe("SignupWizard", () => {
       sex: "feminino",
       diabetesType: "tipo2",
       yearsWithDiabetes: "8",
+      phone: "+5511912345678",
     });
   });
 
@@ -136,6 +138,42 @@ describe("SignupWizard", () => {
     await waitFor(() => expect(heading()).toBe("Crie seu acesso"));
     expect(screen.getByRole("alert").textContent).toMatch(/já tem cadastro/i);
     expect(completeSignup).not.toHaveBeenCalled();
+  });
+
+  it("celular é obrigatório e confere o formato antes de avançar", async () => {
+    const user = userEvent.setup();
+    render(<SignupWizard />);
+    await user.type(screen.getByLabelText("Nome"), "Maria Silva");
+    await user.type(screen.getByLabelText("E-mail"), "maria@example.com");
+    await user.type(screen.getByLabelText(/Senha/), "senha-segura-1");
+
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("alert").textContent).toMatch(/Informe o celular/);
+    expect(heading()).toBe("Crie seu acesso");
+
+    await user.type(screen.getByLabelText(/Celular com DDD/), "1131234567"); // fixo
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("alert").textContent).toMatch(/fixo/);
+
+    await user.clear(screen.getByLabelText(/Celular com DDD/));
+    await user.type(screen.getByLabelText(/Celular com DDD/), "(00) 91234-5678");
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    expect(screen.getByRole("alert").textContent).toMatch(/DDD|inválido/);
+    expect(heading()).toBe("Crie seu acesso");
+
+    // ao corrigir o campo, o aviso antigo some
+    await user.clear(screen.getByLabelText(/Celular com DDD/));
+    await user.type(screen.getByLabelText(/Celular com DDD/), "1");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("formata o celular ao sair do campo", async () => {
+    const user = userEvent.setup();
+    render(<SignupWizard />);
+    const phone = screen.getByLabelText(/Celular com DDD/) as HTMLInputElement;
+    await user.type(phone, "11912345678");
+    await user.tab();
+    expect(phone.value).toBe("(11) 91234-5678");
   });
 
   it("com captcha: exige marcar no último passo e envia o token", async () => {

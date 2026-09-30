@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { ProfileForm } from "@/components/profile-form";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { diagnosisYearToYears } from "@/lib/profile-utils";
 import { getProfile } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
@@ -18,6 +19,7 @@ export default async function PerfilPage() {
       <ProfileForm
         name={user.name}
         email={user.email}
+        phone={formatPhoneDisplay(profile.phone)}
         birthDate={profile.birthDate}
         sex={profile.sex}
         diabetesType={profile.diabetesType}
