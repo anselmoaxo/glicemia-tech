@@ -42,7 +42,7 @@ TEST_DATABASE_URL=postgresql://... npm test
 
 - **Bloqueio por conta:** 5 senhas erradas para o mesmo e-mail travam o login por 15 minutos (vale também para e-mails inexistentes; o e-mail é guardado só como HMAC).
 - **Limite por IP:** 10 tentativas de login por minuto e 10 cadastros por hora, guardado no banco (`rate_limits`).
-- **CAPTCHA (Google reCAPTCHA v2):** crie as chaves em <https://www.google.com/recaptcha/admin> (tipo *v2 Caixa de seleção*, domínios `localhost` e o do app) e defina `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` e `RECAPTCHA_SECRET_KEY`. Sem as duas, o captcha fica desligado.
+- **CAPTCHA (Google reCAPTCHA v2):** crie as chaves em <https://www.google.com/recaptcha/admin> (tipo *v2 Caixa de seleção*, domínios `localhost` e o do app) e defina `RECAPTCHA_SITE_KEY` (a antiga `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` também funciona) e `RECAPTCHA_SECRET_KEY`. Sem as duas, o captcha fica desligado.
 
 ## Segurança e privacidade
 

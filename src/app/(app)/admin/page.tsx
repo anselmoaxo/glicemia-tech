@@ -45,7 +45,7 @@ export default async function AdminPage() {
             ) : (
               <strong className="text-high">desativado</strong>
             )}
-            {!captchaEnabled() && <span className="text-muted-foreground"> (faltam as chaves RECAPTCHA_SECRET_KEY e NEXT_PUBLIC_RECAPTCHA_SITE_KEY)</span>}
+            {!captchaEnabled() && <span className="text-muted-foreground"> (faltam as chaves RECAPTCHA_SITE_KEY e RECAPTCHA_SECRET_KEY)</span>}
           </li>
           <li>Bloqueio por tentativas: <strong className="text-ok">ativo</strong> (5 senhas erradas = 15 minutos)</li>
           <li>Contas bloqueadas agora: <strong>{o.locked}</strong></li>
