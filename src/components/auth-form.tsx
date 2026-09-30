@@ -36,7 +36,7 @@ export function AuthForm({ mode, next = "/inicio" }: { mode: "login" | "cadastro
     if (res.error) {
       setPending(false);
       return setError(
-        isLogin ? "E-mail ou senha incorretos." : "Não foi possível criar a conta. Verifique os dados.",
+        isLogin ? "Não foi possível entrar. Confira e-mail e senha; se estiver correto, a conta pode estar suspensa." : "Não foi possível criar a conta. Verifique os dados.",
       );
     }
     if (!isLogin) await recordConsent();

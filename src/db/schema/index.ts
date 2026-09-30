@@ -7,3 +7,4 @@ export * from "./insulin";
 export * from "./sharing";
 export * from "./alerts";
 export * from "./reports";
+export * from "./admin";

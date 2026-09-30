@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isAdmin } from "@/lib/admin";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Mais" };
@@ -14,12 +15,13 @@ const items = [
 ];
 
 export default async function MaisPage() {
-  await requireUser();
+  const user = await requireUser();
+  const list = isAdmin(user.id) ? [...items, { href: "/admin", label: "Administração" }] : items;
   return (
     <section className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">Mais</h1>
       <ul className="flex flex-col gap-3">
-        {items.map((i) => (
+        {list.map((i) => (
           <li key={i.href}>
             <Link
               href={i.href}

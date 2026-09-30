@@ -9,6 +9,8 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url(),
+  // IDs de usuário (separados por vírgula) com acesso à área administrativa
+  ADMIN_USER_IDS: z.string().default(""),
 });
 
 type Env = z.infer<typeof schema>;
@@ -21,5 +23,6 @@ export const env: Env = isBuild
       DATABASE_URL: process.env.DATABASE_URL ?? "",
       BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? "build-placeholder-build-placeholder-0",
       BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelUrl ?? "http://localhost:3000",
+      ADMIN_USER_IDS: process.env.ADMIN_USER_IDS ?? "",
     }
   : schema.parse({ ...process.env, BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? vercelUrl });

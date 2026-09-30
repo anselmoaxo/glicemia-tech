@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { ProfileForm } from "@/components/profile-form";
 import { getProfile } from "@/lib/profile";
@@ -22,6 +23,8 @@ export default async function PerfilPage() {
         alertEmailSelf={profile.alertEmailSelf}
         alertEmailFamily={profile.alertEmailFamily}
       />
+
+      <ChangePasswordForm />
 
       <form action={deleteAccount} className="flex flex-col gap-2 border-t pt-6">
         <h2 className="text-xl font-semibold">Excluir conta</h2>

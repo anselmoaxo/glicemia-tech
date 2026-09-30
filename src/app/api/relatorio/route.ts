@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 // PDF do próprio usuário (ou de quem compartilhou "Relatórios" com ele).
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) return new Response("Não autenticado", { status: 401 });
+  if (!session || session.user.suspendedAt) return new Response("Não autenticado", { status: 401 });
 
   const params = request.nextUrl.searchParams;
   const ownerId = params.get("owner") ?? session.user.id;
