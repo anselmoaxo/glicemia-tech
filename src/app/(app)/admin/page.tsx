@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/admin";
+import { captchaEnabled } from "@/lib/captcha";
 import { ACTION_LABEL, fmtDateTime } from "@/lib/admin-format";
 import { getOverview } from "@/lib/admin-queries";
 import { addDaysStr } from "@/lib/reports/range";
@@ -24,6 +25,7 @@ export default async function AdminPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      <h1 className="sr-only">Resumo da administração</h1>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label="Usuários" value={o.total} hint={`${o.suspended} suspensos`} />
         <Stat label="Novos em 7 dias" value={o.new7} hint={`${o.new30} em 30 dias`} />
@@ -32,6 +34,23 @@ export default async function AdminPage() {
         <Stat label="Links de médico ativos" value={o.shareLinks} />
         <Stat label="Convites pendentes" value={o.pendingInvites} />
       </dl>
+
+      <section aria-labelledby="seguranca" className="rounded-2xl border bg-card p-4">
+        <h2 id="seguranca" className="text-xl font-bold">Segurança do login</h2>
+        <ul className="mt-2 flex flex-col gap-1 text-base">
+          <li>
+            CAPTCHA do Google:{" "}
+            {captchaEnabled() ? (
+              <strong className="text-ok">ativo</strong>
+            ) : (
+              <strong className="text-high">desativado</strong>
+            )}
+            {!captchaEnabled() && <span className="text-muted-foreground"> (faltam as chaves RECAPTCHA_SECRET_KEY e NEXT_PUBLIC_RECAPTCHA_SITE_KEY)</span>}
+          </li>
+          <li>Bloqueio por tentativas: <strong className="text-ok">ativo</strong> (5 senhas erradas = 15 minutos)</li>
+          <li>Contas bloqueadas agora: <strong>{o.locked}</strong></li>
+        </ul>
+      </section>
 
       {o.failedEmails > 0 && (
         <p role="status" className="rounded-2xl border border-high/30 bg-high-soft p-4 text-base font-medium text-high">

@@ -2,18 +2,23 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Recaptcha, type RecaptchaHandle } from "@/components/recaptcha";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
+import { CAPTCHA_REQUIRED, loginErrorMessage } from "@/lib/auth-errors";
+import { CAPTCHA_HEADER } from "@/lib/captcha";
 import { signInSchema } from "@/lib/validation";
 
 /** Formulário de entrada. O cadastro é o passo a passo em signup-wizard.tsx. */
-export function AuthForm({ next = "/inicio" }: { next?: string }) {
+export function AuthForm({ next = "/inicio", siteKey = "" }: { next?: string; siteKey?: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const captcha = useRef<RecaptchaHandle>(null);
   const signupHref = `/cadastro${next !== "/inicio" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -21,13 +26,17 @@ export function AuthForm({ next = "/inicio" }: { next?: string }) {
     setError(null);
     const parsed = signInSchema.safeParse(Object.fromEntries(new FormData(e.currentTarget)));
     if (!parsed.success) return setError(parsed.error.issues[0].message);
+    if (siteKey && !token) return setError(CAPTCHA_REQUIRED);
 
     setPending(true);
-    const res = await authClient.signIn.email(parsed.data);
+    const res = await authClient.signIn.email(parsed.data, {
+      headers: siteKey && token ? { [CAPTCHA_HEADER]: token } : undefined,
+    });
     setPending(false);
 
     if (res.error) {
-      return setError("Não foi possível entrar. Confira e-mail e senha; se estiver correto, a conta pode estar suspensa.");
+      captcha.current?.reset(); // o token do captcha vale uma vez só
+      return setError(loginErrorMessage(res.error));
     }
     router.replace(next);
     router.refresh();
@@ -43,6 +52,7 @@ export function AuthForm({ next = "/inicio" }: { next?: string }) {
         <Label htmlFor="password" className="text-base">Senha</Label>
         <Input id="password" name="password" type="password" autoComplete="current-password" className="h-12 text-base" required />
       </div>
+      {siteKey && <Recaptcha ref={captcha} siteKey={siteKey} onChange={setToken} />}
       {error && <p role="alert" className="text-base font-medium text-destructive">{error}</p>}
       <Button type="submit" disabled={pending} className="h-14 text-lg">
         {pending ? "Aguarde..." : "Entrar"}

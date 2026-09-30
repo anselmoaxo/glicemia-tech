@@ -1,49 +1,40 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { glucoseTargets } from "@/db/schema";
-import { TARGET_KEYS } from "@/lib/glucose/contexts";
-import { targetsSchema } from "@/lib/glucose/validation";
+import { validateTargets, type TargetsValidation } from "@/lib/glucose/targets";
 import { requireUser } from "@/lib/session";
 
-export type TargetsState = { ok?: boolean; error?: string };
+export type TargetsState = {
+  ok?: boolean;
+  /** erro por faixa (chave = geral | jejum | pos_refeicao) */
+  errors?: TargetsValidation["errors"];
+};
 
 export async function saveTargets(_: TargetsState, formData: FormData): Promise<TargetsState> {
   const user = await requireUser();
-  const parsed = targetsSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: "Use valores entre 20 e 600 mg/dL" };
+  const result = validateTargets(Object.fromEntries(formData));
+  if (Object.keys(result.errors).length > 0) return { errors: result.errors };
 
-  const values = parsed.data as Record<string, number | "">;
-  const upserts: { targetKey: string; min: number; max: number }[] = [];
-  const clears: string[] = [];
-
-  for (const { key, label } of TARGET_KEYS) {
-    const min = values[`${key}_min`];
-    const max = values[`${key}_max`];
-    if (min === "" && max === "") clears.push(key);
-    else if (min === "" || max === "") return { error: `Preencha mínimo e máximo de "${label}"` };
-    else if (min >= max) return { error: `Em "${label}", o mínimo deve ser menor que o máximo` };
-    else upserts.push({ targetKey: key, min, max });
-  }
-
-  for (const key of clears) {
+  if (result.clear.length > 0) {
     await db
       .delete(glucoseTargets)
-      .where(and(eq(glucoseTargets.userId, user.id), eq(glucoseTargets.targetKey, key)));
+      .where(and(eq(glucoseTargets.userId, user.id), inArray(glucoseTargets.targetKey, result.clear)));
   }
-  for (const u of upserts) {
+  for (const [targetKey, range] of Object.entries(result.values)) {
     await db
       .insert(glucoseTargets)
-      .values({ userId: user.id, targetKey: u.targetKey, minMgDl: u.min, maxMgDl: u.max })
+      .values({ userId: user.id, targetKey, minMgDl: range.min, maxMgDl: range.max })
       .onConflictDoUpdate({
         target: [glucoseTargets.userId, glucoseTargets.targetKey],
-        set: { minMgDl: u.min, maxMgDl: u.max, updatedAt: new Date() },
+        set: { minMgDl: range.min, maxMgDl: range.max, updatedAt: new Date() },
       });
   }
 
   revalidatePath("/metas");
   revalidatePath("/glicemia");
+  revalidatePath("/inicio");
   return { ok: true };
 }

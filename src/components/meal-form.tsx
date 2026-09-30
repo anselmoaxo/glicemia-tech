@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useFormAction } from "@/lib/use-form-action";
+import { useState } from "react";
 import type { MealState } from "@/app/(app)/refeicoes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,11 +27,11 @@ const chip =
   "flex min-h-14 cursor-pointer items-center justify-center rounded-lg border-2 border-input px-3 text-center text-base font-medium peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring";
 
 export function MealForm({ action, defaults: d, submitLabel }: Props) {
-  const [state, formAction, pending] = useActionState<MealState, FormData>(action, {});
+  const [state, formAction, pending] = useFormAction<MealState>(action, {});
   const [type, setType] = useState(d.mealType);
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form onSubmit={formAction} className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-lg font-medium">Tipo de refeição</legend>
         <div className="grid grid-cols-2 gap-3">

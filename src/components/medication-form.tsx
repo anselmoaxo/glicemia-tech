@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useFormAction } from "@/lib/use-form-action";
+import { useState } from "react";
 import type { MedicationState } from "@/app/(app)/medicamentos/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +31,11 @@ const field =
   "h-12 w-full rounded-lg border border-input bg-background px-3 text-base focus-visible:outline-2 focus-visible:outline-ring";
 
 export function MedicationForm({ action, defaults: d, submitLabel }: Props) {
-  const [state, formAction, pending] = useActionState<MedicationState, FormData>(action, {});
+  const [state, formAction, pending] = useFormAction<MedicationState>(action, {});
   const [times, setTimes] = useState(d.times.length ? d.times : [""]);
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form onSubmit={formAction} className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <Label htmlFor="name" className="text-base">Nome do medicamento</Label>
         <Input id="name" name="name" maxLength={80} defaultValue={d.name} required className="h-12 text-base" />

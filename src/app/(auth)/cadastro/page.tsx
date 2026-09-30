@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SignupWizard } from "@/components/signup-wizard";
+import { captchaEnabled, captchaSiteKey } from "@/lib/captcha";
 import { safeNext } from "@/lib/safe-next";
 
 export const metadata: Metadata = { title: "Criar conta" };
@@ -7,7 +8,7 @@ export const metadata: Metadata = { title: "Criar conta" };
 export default async function CadastroPage({ searchParams }: PageProps<"/cadastro">) {
   return (
     <>
-      <SignupWizard next={safeNext((await searchParams).next)} />
+      <SignupWizard next={safeNext((await searchParams).next)} siteKey={captchaEnabled() ? captchaSiteKey() : ""} />
       <p className="text-sm text-muted-foreground">
         Este app ajuda a organizar seu acompanhamento. Ele não faz diagnóstico, não sugere doses
         e não substitui o acompanhamento médico.

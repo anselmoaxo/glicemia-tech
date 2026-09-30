@@ -1,16 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
 import { inviteFamily, type InviteState } from "@/app/(app)/compartilhar/actions";
+import { useFormAction } from "@/lib/use-form-action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SHARE_MODULES } from "@/lib/sharing/modules";
 
 export function InviteForm() {
-  const [state, action, pending] = useActionState<InviteState, FormData>(inviteFamily, {});
+  const [state, action, pending] = useFormAction<InviteState>(inviteFamily, {});
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form onSubmit={action} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <Label htmlFor="email" className="text-base">E-mail do familiar</Label>
         <Input id="email" name="email" type="email" autoComplete="off" required className="h-12 text-base" />

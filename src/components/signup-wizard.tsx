@@ -4,12 +4,15 @@ import { ArrowLeft, Check } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Recaptcha, type RecaptchaHandle } from "@/components/recaptcha";
 import { completeSignup } from "@/app/(auth)/actions";
 import { AboutFields, DiabetesFields } from "@/components/health-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
+import { CAPTCHA_REQUIRED, signupErrorMessage } from "@/lib/auth-errors";
+import { CAPTCHA_HEADER } from "@/lib/captcha";
 import { DIABETES_OPTIONS, SEX_OPTIONS } from "@/lib/profile-utils";
 import { healthFieldsSchema, signUpSchema } from "@/lib/validation";
 
@@ -28,7 +31,7 @@ const diabetesSchema = healthFieldsSchema.pick({ diabetesType: true, yearsWithDi
 const label = (opts: readonly { value: string; label: string }[], v: string) =>
   opts.find((o) => o.value === v)?.label ?? "Não informado";
 
-export function SignupWizard({ next = "/inicio" }: { next?: string }) {
+export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string; siteKey?: string }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -37,6 +40,8 @@ export function SignupWizard({ next = "/inicio" }: { next?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [summary, setSummary] = useState<[string, string][]>([]);
+  const [token, setToken] = useState<string | null>(null);
+  const captcha = useRef<RecaptchaHandle>(null);
   const loginHref = `/login${next !== "/inicio" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   // Ao trocar de passo, leva o foco ao título (leitores de tela anunciam a mudança).
@@ -85,13 +90,18 @@ export function SignupWizard({ next = "/inicio" }: { next?: string }) {
     const account = signUpSchema.parse(v);
     const extras = healthFieldsSchema.safeParse(v);
     if (!extras.success) return setError(extras.error.issues[0].message);
+    if (siteKey && !token) return setError(CAPTCHA_REQUIRED);
 
     setPending(true);
-    const res = await authClient.signUp.email(account);
+    const res = await authClient.signUp.email(account, {
+      headers: siteKey && token ? { [CAPTCHA_HEADER]: token } : undefined,
+    });
     if (res.error) {
       setPending(false);
-      setStep(0);
-      return setError("Não foi possível criar a conta. Se você já tem cadastro, entre com seu e-mail.");
+      captcha.current?.reset(); // o token do captcha vale uma vez só
+      // erro de captcha ou de limite: fica no último passo; senão (e-mail repetido etc.) volta ao primeiro
+      if (!res.error.code?.match(/^(MISSING_RESPONSE|VERIFICATION_FAILED|UNKNOWN_ERROR)$/) && res.error.status !== 429) setStep(0);
+      return setError(signupErrorMessage(res.error));
     }
     await completeSignup({
       birthDate: v.birthDate ?? "",
@@ -170,6 +180,7 @@ export function SignupWizard({ next = "/inicio" }: { next?: string }) {
             </div>
           ))}
         </dl>
+        {siteKey && step === LAST && <Recaptcha ref={captcha} siteKey={siteKey} onChange={setToken} />}
         <label className="flex items-start gap-3 text-base">
           <input type="checkbox" name="consent" className="mt-1 size-6 shrink-0" />
           <span>

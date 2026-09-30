@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { useFormAction } from "@/lib/use-form-action";
 import { createSharedReport, type ShareLinkState } from "@/app/(app)/relatorios/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +11,12 @@ const field =
   "h-12 w-full rounded-lg border border-input bg-background px-3 text-base focus-visible:outline-2 focus-visible:outline-ring";
 
 export function ShareReportForm() {
-  const [state, action, pending] = useActionState<ShareLinkState, FormData>(createSharedReport, {});
+  const [state, action, pending] = useFormAction<ShareLinkState>(createSharedReport, {});
   const [custom, setCustom] = useState(false);
   const [copied, setCopied] = useState(false);
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form onSubmit={action} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="dias" className="text-base">Período do relatório</Label>
         <select

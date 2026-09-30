@@ -10,6 +10,12 @@ const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, refresh: vi.fn() }) }));
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 vi.mock("@/lib/auth-client", () => ({ authClient: { signUp: { email: (...a: unknown[]) => signUp(...a) } } }));
+vi.mock("@/components/recaptcha", () => ({
+  Recaptcha: ({ onChange, ref }: { onChange: (t: string | null) => void; ref?: { current: unknown } }) => {
+    if (ref) ref.current = { reset: () => onChange(null) };
+    return <button type="button" onClick={() => onChange("token-abc")}>marcar captcha</button>;
+  },
+}));
 vi.mock("@/app/(auth)/actions", () => ({ completeSignup: (...a: unknown[]) => completeSignup(...a) }));
 
 import { SignupWizard } from "./signup-wizard";
@@ -77,7 +83,10 @@ describe("SignupWizard", () => {
     await user.click(screen.getByRole("button", { name: /Criar minha conta/ }));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/inicio"));
-    expect(signUp).toHaveBeenCalledWith({ name: "Maria Silva", email: "maria@example.com", password: "senha-segura-1" });
+    expect(signUp).toHaveBeenCalledWith(
+      { name: "Maria Silva", email: "maria@example.com", password: "senha-segura-1" },
+      { headers: undefined }, // sem chave do captcha configurada
+    );
     expect(completeSignup).toHaveBeenCalledWith({
       birthDate: "1960-03-10",
       sex: "feminino",
@@ -127,5 +136,39 @@ describe("SignupWizard", () => {
     await waitFor(() => expect(heading()).toBe("Crie seu acesso"));
     expect(screen.getByRole("alert").textContent).toMatch(/já tem cadastro/i);
     expect(completeSignup).not.toHaveBeenCalled();
+  });
+
+  it("com captcha: exige marcar no último passo e envia o token", async () => {
+    const user = userEvent.setup();
+    render(<SignupWizard siteKey="pub" />);
+    await fillStep1(user);
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: "Pular este passo" }));
+    await user.click(screen.getByRole("button", { name: "Pular este passo" }));
+    await user.click(screen.getByRole("checkbox"));
+
+    await user.click(screen.getByRole("button", { name: /Criar minha conta/ }));
+    expect(screen.getByRole("alert").textContent).toMatch(/Não sou um robô/);
+    expect(signUp).not.toHaveBeenCalled();
+
+    await user.click(screen.getByText("marcar captcha"));
+    await user.click(screen.getByRole("button", { name: /Criar minha conta/ }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/inicio"));
+    expect(signUp.mock.calls[0][1]).toEqual({ headers: { "x-captcha-response": "token-abc" } });
+  });
+
+  it("falha de captcha no cadastro fica no último passo (não volta ao início)", async () => {
+    const user = userEvent.setup();
+    signUp.mockResolvedValue({ error: { status: 403, code: "VERIFICATION_FAILED" } });
+    render(<SignupWizard siteKey="pub" />);
+    await fillStep1(user);
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: "Pular este passo" }));
+    await user.click(screen.getByRole("button", { name: "Pular este passo" }));
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByText("marcar captcha"));
+    await user.click(screen.getByRole("button", { name: /Criar minha conta/ }));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/robô/));
+    expect(heading()).toBe("Quase lá");
   });
 });

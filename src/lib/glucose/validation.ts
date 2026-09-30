@@ -28,15 +28,4 @@ export const readingSchema = z
     message: "Informe o nome do contexto",
   });
 
-const mg = z.union([z.literal(""), z.coerce.number().int().min(20).max(600)]);
-
-export const targetsSchema = z.object({
-  geral_min: mg,
-  geral_max: mg,
-  jejum_min: mg,
-  jejum_max: mg,
-  pos_refeicao_min: mg,
-  pos_refeicao_max: mg,
-});
-
 export const uuidSchema = z.string().uuid();

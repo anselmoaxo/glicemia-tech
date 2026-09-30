@@ -6,6 +6,7 @@ import {
   familyMembers,
   glucoseReadings,
   insulinLogs,
+  loginAttempts,
   meals,
   medications,
   notifications,
@@ -28,7 +29,7 @@ export async function getOverview() {
   const d30 = new Date(now.getTime() - 30 * DAY);
   const d14 = new Date(now.getTime() - 14 * DAY);
 
-  const [total, suspended, new7, new30, active7, readings, shareLinks, pendingInvites, failedEmails, signups, logs] =
+  const [total, suspended, new7, new30, active7, readings, shareLinks, pendingInvites, failedEmails, locked, signups, logs] =
     await Promise.all([
       one(db.select({ n: count() }).from(users)),
       one(db.select({ n: count() }).from(users).where(isNotNull(users.suspendedAt))),
@@ -59,6 +60,7 @@ export async function getOverview() {
           .from(notifications)
           .where(and(eq(notifications.status, "failed"), gte(notifications.createdAt, d7))),
       ),
+      one(db.select({ n: count() }).from(loginAttempts).where(gt(loginAttempts.lockedUntil, now))),
       db
         .select({
           day: sql<string>`to_char(${users.createdAt} at time zone ${ADMIN_TZ}, 'YYYY-MM-DD')`,
@@ -79,7 +81,7 @@ export async function getOverview() {
         .limit(10),
     ]);
 
-  return { total, suspended, new7, new30, active7, readings, shareLinks, pendingInvites, failedEmails, signups, logs };
+  return { total, suspended, new7, new30, active7, readings, shareLinks, pendingInvites, failedEmails, locked, signups, logs };
 }
 
 export async function listUsers(query: string, page: number) {

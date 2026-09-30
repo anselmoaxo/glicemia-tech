@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useFormAction } from "@/lib/use-form-action";
+import { useState } from "react";
 import type { ReadingState } from "@/app/(app)/glicemia/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,12 +33,12 @@ const textarea =
   "w-full rounded-lg border border-input bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-ring";
 
 export function GlucoseForm({ action, defaults: d, submitLabel }: Props) {
-  const [state, formAction, pending] = useActionState<ReadingState, FormData>(action, {});
+  const [state, formAction, pending] = useFormAction<ReadingState>(action, {});
   const [context, setContext] = useState(d.contextKey);
   const options = [...CONTEXTS, { key: CUSTOM_CONTEXT_KEY, label: "Outro..." }];
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form onSubmit={formAction} className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <Label htmlFor="value" className="text-lg">Glicemia (mg/dL)</Label>
         <Input

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useFormAction } from "@/lib/use-form-action";
+import { useState } from "react";
 import type { InsulinState } from "@/app/(app)/insulina/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,12 +34,12 @@ const field =
   "h-12 w-full rounded-lg border border-input bg-background px-3 text-base focus-visible:outline-2 focus-visible:outline-ring";
 
 export function InsulinForm({ action, types, defaults: d, submitLabel }: Props) {
-  const [state, formAction, pending] = useActionState<InsulinState, FormData>(action, {});
+  const [state, formAction, pending] = useFormAction<InsulinState>(action, {});
   const [typeId, setTypeId] = useState(d.typeId || (types.length === 0 ? NEW_TYPE : ""));
   const options = [...types.map((t) => ({ key: t.id, label: t.name })), { key: NEW_TYPE, label: "+ Novo tipo" }];
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form onSubmit={formAction} className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <Label htmlFor="units" className="text-lg">Unidades aplicadas</Label>
         <Input

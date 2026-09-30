@@ -1,14 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
 import { deleteUser, type AdminState } from "@/app/(app)/admin/actions";
+import { useFormAction } from "@/lib/use-form-action";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function DeleteUserForm({ id, email }: { id: string; email: string }) {
-  const [state, action, pending] = useActionState<AdminState, FormData>(deleteUser, {});
+  const [state, action, pending] = useFormAction<AdminState>(deleteUser, {});
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form onSubmit={action} className="flex flex-col gap-3">
       <input type="hidden" name="id" value={id} />
       <Label htmlFor="confirmEmail" className="text-base">
         Para excluir, digite o e-mail da conta: <span className="font-semibold break-all">{email}</span>

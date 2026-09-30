@@ -38,6 +38,12 @@ TEST_DATABASE_URL=postgresql://... npm test
    `BETTER_AUTH_URL` (domínio final, com `https://`), `RESEND_API_KEY` e `EMAIL_FROM` (opcionais).
 3. Para enviar e-mails a qualquer destinatário, verifique seu domínio no Resend.
 
+## Proteção do login
+
+- **Bloqueio por conta:** 5 senhas erradas para o mesmo e-mail travam o login por 15 minutos (vale também para e-mails inexistentes; o e-mail é guardado só como HMAC).
+- **Limite por IP:** 10 tentativas de login por minuto e 10 cadastros por hora, guardado no banco (`rate_limits`).
+- **CAPTCHA (Google reCAPTCHA v2):** crie as chaves em <https://www.google.com/recaptcha/admin> (tipo *v2 Caixa de seleção*, domínios `localhost` e o do app) e defina `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` e `RECAPTCHA_SECRET_KEY`. Sem as duas, o captcha fica desligado.
+
 ## Segurança e privacidade
 
 - Toda consulta filtra pelo `userId` da sessão; acesso de familiar passa por `getAccessibleModules`.

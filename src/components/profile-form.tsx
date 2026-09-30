@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+
 import { updateProfile, type ProfileState } from "@/app/(app)/perfil/actions";
+import { useFormAction } from "@/lib/use-form-action";
 import { HealthFields } from "@/components/health-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +24,9 @@ const selectClass =
   "h-12 w-full rounded-lg border border-input bg-background px-3 text-base focus-visible:outline-2 focus-visible:outline-ring";
 
 export function ProfileForm(p: Props) {
-  const [state, action, pending] = useActionState<ProfileState, FormData>(updateProfile, {});
+  const [state, action, pending] = useFormAction<ProfileState>(updateProfile, {});
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form onSubmit={action} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <Label htmlFor="name" className="text-base">Nome</Label>
         <Input id="name" name="name" defaultValue={p.name} className="h-12 text-base" required />
