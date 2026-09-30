@@ -13,7 +13,7 @@ export function TargetsForm({ targets }: { targets: Targets }) {
   return (
     <form action={action} className="flex flex-col gap-6">
       {TARGET_KEYS.map(({ key, label }) => (
-        <fieldset key={key} className="flex flex-col gap-3 rounded-xl border p-4">
+        <fieldset key={key} className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
           <legend className="px-1 text-lg font-semibold">{label}</legend>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">

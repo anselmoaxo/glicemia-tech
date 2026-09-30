@@ -40,3 +40,8 @@ export function formatDateTime(d: Date, tz: string) {
     minute: "2-digit",
   }).format(d);
 }
+
+/** Ex.: "quarta-feira, 30 de setembro". */
+export function formatLongDate(d: Date, tz: string) {
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: tz, weekday: "long", day: "numeric", month: "long" }).format(d);
+}

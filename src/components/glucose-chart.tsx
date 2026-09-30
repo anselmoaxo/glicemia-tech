@@ -38,7 +38,7 @@ export function GlucoseChart({ points, target, timezone, summary }: Props) {
         <LineChart data={points} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           {target && (
-            <ReferenceArea y1={target.min} y2={target.max} fill="#16a34a" fillOpacity={0.12} ifOverflow="extendDomain" />
+            <ReferenceArea y1={target.min} y2={target.max} fill="#0e7a56" fillOpacity={0.16} ifOverflow="extendDomain" />
           )}
           <XAxis
             dataKey="t"
@@ -61,7 +61,7 @@ export function GlucoseChart({ points, target, timezone, summary }: Props) {
           <Line
             type="monotone"
             dataKey="value"
-            stroke="#1d4ed8"
+            stroke="#0f3d4c"
             strokeWidth={3}
             dot={{ r: 4 }}
             activeDot={{ r: 6 }}

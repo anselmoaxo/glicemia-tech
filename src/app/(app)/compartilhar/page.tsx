@@ -24,7 +24,7 @@ export default async function CompartilharPage() {
         {members.length === 0 && <p className="text-base text-muted-foreground">Ninguém ainda.</p>}
         <ul className="flex flex-col gap-4">
           {members.map((m) => (
-            <li key={m.id} className="flex flex-col gap-2 rounded-xl border p-4">
+            <li key={m.id} className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
               <p className="break-all text-lg font-semibold">{m.email}</p>
               <p className="text-base">{STATUS[m.status as keyof typeof STATUS]}</p>
               <p className="text-base text-muted-foreground">

@@ -24,7 +24,7 @@ export default async function HistoricoMedicamentosPage({
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((l) => (
-            <li key={l.id} className="flex items-center justify-between gap-3 rounded-xl border p-4">
+            <li key={l.id} className="flex items-center justify-between gap-3 rounded-2xl border bg-card p-4">
               <div>
                 <p className="text-lg font-semibold">{l.name}</p>
                 <p className="text-base text-muted-foreground">
@@ -33,7 +33,7 @@ export default async function HistoricoMedicamentosPage({
               </div>
               <span
                 className={`rounded-full border-2 px-3 py-1 text-sm font-semibold ${
-                  l.status === "taken" ? "border-green-700 bg-green-50 text-green-900" : "border-border bg-muted"
+                  l.status === "taken" ? "border-ok/30 bg-ok-soft text-ok" : "border-border bg-muted"
                 }`}
               >
                 {l.status === "taken" ? "Tomei" : "Não tomei"}

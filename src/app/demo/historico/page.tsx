@@ -4,9 +4,9 @@ import { contextLabel } from "@/lib/glucose/contexts";
 import { mockReadings, TZ } from "../mock";
 
 const style: Record<GlucoseStatus, string> = {
-  low: "border-blue-700 bg-blue-50 text-blue-900",
-  high: "border-red-700 bg-red-50 text-red-900",
-  in_range: "border-green-700 bg-green-50 text-green-900",
+  low: "border-low/30 bg-low-soft text-low",
+  high: "border-high/30 bg-high-soft text-high",
+  in_range: "border-ok/30 bg-ok-soft text-ok",
   no_target: "border-border bg-muted text-muted-foreground",
 };
 
@@ -17,7 +17,7 @@ export default function DemoHistorico() {
       <h1 className="text-3xl font-bold">Glicemia</h1>
       <ul className="flex flex-col gap-4">
         {readings.map((r) => (
-          <li key={r.id} className="flex flex-col gap-2 rounded-xl border p-4">
+          <li key={r.id} className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-3xl font-bold">
                 {r.value} <span className="text-base font-normal text-muted-foreground">mg/dL</span>

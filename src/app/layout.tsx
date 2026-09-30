@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Atkinson_Hyperlegible_Mono, Atkinson_Hyperlegible_Next } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-sw";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+// Atkinson Hyperlegible foi desenhada para baixa visão: letras e números inconfundíveis.
+const ui = Atkinson_Hyperlegible_Next({ variable: "--font-ui", subsets: ["latin"], display: "swap" });
+const lcd = Atkinson_Hyperlegible_Mono({ variable: "--font-lcd-face", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "Glicose Tech", template: "%s · Glicose Tech" },
@@ -16,12 +18,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#1d4ed8",
+  themeColor: "#0f3d4c",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${ui.variable} ${lcd.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col text-base">
         {children}
         <RegisterServiceWorker />

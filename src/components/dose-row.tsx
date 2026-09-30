@@ -15,7 +15,7 @@ const base =
 
 export function DoseRow({ scheduleId, date, time, name, dose, unit, status }: Props) {
   return (
-    <li className="flex flex-col gap-3 rounded-xl border p-4">
+    <li className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
       <div>
         <p className="text-xl font-semibold">{name}</p>
         <p className="text-base text-muted-foreground">
@@ -29,7 +29,7 @@ export function DoseRow({ scheduleId, date, time, name, dose, unit, status }: Pr
           name="status"
           value="taken"
           aria-pressed={status === "taken"}
-          className={`${base} ${status === "taken" ? "border-green-700 bg-green-700 text-white" : "border-input"}`}
+          className={`${base} ${status === "taken" ? "border-ok bg-ok text-white" : "border-input"}`}
         >
           {status === "taken" ? "✓ Tomei" : "Tomei"}
         </button>

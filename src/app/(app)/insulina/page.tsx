@@ -38,7 +38,7 @@ export default async function InsulinaPage({ searchParams }: PageProps<"/insulin
       ) : (
         <ul className="flex flex-col gap-4">
           {items.map((l) => (
-            <li key={l.id} className="flex flex-col gap-3 rounded-xl border p-4">
+            <li key={l.id} className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
               <p className="text-3xl font-bold">
                 {formatUnits(l.units)}{" "}
                 <span className="text-base font-normal text-muted-foreground">unidades · {l.typeName}</span>

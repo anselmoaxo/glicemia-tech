@@ -64,7 +64,7 @@ export default async function MedicamentosPage() {
         {active.length === 0 && <p className="text-base text-muted-foreground">Nenhum medicamento cadastrado.</p>}
         <ul className="flex flex-col gap-4">
           {active.map((m) => (
-            <li key={m.id} className="flex flex-col gap-3 rounded-xl border p-4">
+            <li key={m.id} className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
               <p className="text-xl font-semibold">
                 {m.name} <span className="text-base font-normal text-muted-foreground">{m.dose} {m.unit}</span>
               </p>
@@ -91,7 +91,7 @@ export default async function MedicamentosPage() {
       </div>
 
       {inactive.length > 0 && (
-        <details className="rounded-xl border px-4 py-3">
+        <details className="rounded-2xl border bg-card px-4 py-3">
           <summary className="min-h-10 cursor-pointer text-base font-medium">
             Desativados ({inactive.length})
           </summary>

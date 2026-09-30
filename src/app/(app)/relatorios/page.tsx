@@ -72,7 +72,7 @@ export default async function RelatoriosPage() {
           {links.map((l) => {
             const active = isActive({ expiresAt: l.expiresAt, revokedAt: l.revokedAt });
             return (
-              <li key={l.id} className="flex flex-col gap-2 rounded-xl border p-4">
+              <li key={l.id} className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
                 <p className="text-base font-semibold">{br(l.fromDate)} a {br(l.toDate)}</p>
                 <p className="text-base">
                   {l.revokedAt ? "Revogado" : active ? `Ativo até ${formatDateTime(l.expiresAt, timezone)}` : "Expirado"}

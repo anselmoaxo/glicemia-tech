@@ -19,7 +19,7 @@ export default async function FamiliaPage() {
             <li key={o.ownerId}>
               <Link
                 href={`/familia/${o.ownerId}`}
-                className="flex min-h-14 items-center rounded-xl border-2 px-4 text-lg font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                className="flex min-h-14 items-center rounded-2xl border-2 bg-card px-4 text-lg font-semibold focus-visible:outline-2 focus-visible:outline-ring"
               >
                 {o.ownerName}
               </Link>

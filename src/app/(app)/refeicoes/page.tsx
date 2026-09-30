@@ -36,7 +36,7 @@ export default async function RefeicoesPage({ searchParams }: PageProps<"/refeic
       ) : (
         <ul className="flex flex-col gap-4">
           {items.map((m) => (
-            <li key={m.id} className="flex flex-col gap-3 rounded-xl border p-4">
+            <li key={m.id} className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
               <p className="text-xl font-semibold">{mealLabel(m.mealType, m.customType)}</p>
               <p className="text-base">{formatDateTime(m.eatenAt, profile.timezone)}</p>
               <p className="whitespace-pre-line text-base text-muted-foreground">{m.description}</p>

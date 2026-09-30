@@ -17,7 +17,7 @@ import { getOwnerName } from "@/lib/sharing/queries";
 export const metadata: Metadata = { title: "Acompanhamento", robots: { index: false } };
 
 const Row = ({ children }: { children: React.ReactNode }) => (
-  <li className="flex flex-col gap-1 rounded-xl border p-4 text-base">{children}</li>
+  <li className="flex flex-col gap-1 rounded-2xl border bg-card p-4 text-base">{children}</li>
 );
 
 export default async function FamiliaOwnerPage({ params }: PageProps<"/familia/[ownerId]">) {
