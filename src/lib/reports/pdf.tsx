@@ -88,6 +88,7 @@ export function ReportDocument({ data }: { data: ReportData }) {
       <Page size="A4" style={s.page}>
         <Text style={s.h1}>Relatório de acompanhamento</Text>
         <Text>{data.ownerName}</Text>
+        {data.patientSummary !== "" && <Text style={s.muted}>{data.patientSummary}</Text>}
         <Text style={s.muted}>Período: {br(range.fromDate)} a {br(range.toDate)} ({range.days} dias)</Text>
 
         <View style={s.cards}>

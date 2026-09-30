@@ -10,6 +10,9 @@ export const profiles = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     birthDate: date("birth_date"),
     diabetesType: text("diabetes_type"),
+    sex: text("sex"),
+    // Ano do diagnóstico (o "há quantos anos" é calculado na hora)
+    diagnosisYear: integer("diagnosis_year"),
     timezone: text("timezone").notNull().default("America/Sao_Paulo"),
     // Percentual de escala da fonte (acessibilidade para idosos)
     fontScale: integer("font_scale").notNull().default(100),
@@ -22,6 +25,8 @@ export const profiles = pgTable(
   },
   (t) => [
     check("profiles_font_scale_chk", sql`${t.fontScale} between 100 and 150`),
+    check("profiles_sex_chk", sql`${t.sex} is null or ${t.sex} in ('feminino','masculino','nao_informado')`),
+    check("profiles_diagnosis_year_chk", sql`${t.diagnosisYear} is null or ${t.diagnosisYear} between 1900 and 2200`),
     check(
       "profiles_diabetes_type_chk",
       sql`${t.diabetesType} is null or ${t.diabetesType} in ('tipo1','tipo2','gestacional','outro','nao_informado')`,

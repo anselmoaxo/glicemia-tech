@@ -1,14 +1,34 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
-import { getProfile } from "@/lib/profile";
+import { yearsToDiagnosisYear } from "@/lib/profile-utils";
 import { requireUser } from "@/lib/session";
+import { signUpExtrasSchema } from "@/lib/validation";
 
-/** Registra o aceite dos termos (LGPD) logo após o cadastro. */
-export async function recordConsent() {
+export type SignUpExtras = {
+  birthDate: string;
+  sex: string;
+  diabetesType: string;
+  yearsWithDiabetes: string;
+};
+
+/** Conclui o cadastro: salva o aceite dos termos (LGPD) e os dados opcionais de saúde. */
+export async function completeSignup(extras: SignUpExtras) {
   const user = await requireUser();
-  await getProfile(user.id);
-  await db.update(profiles).set({ lgpdConsentAt: new Date() }).where(eq(profiles.userId, user.id));
+  const parsed = signUpExtrasSchema.safeParse(extras);
+  // Os dados de saúde são opcionais: se vierem inválidos, guardamos só o consentimento.
+  const d = parsed.success ? parsed.data : null;
+
+  const data = {
+    lgpdConsentAt: new Date(),
+    birthDate: d?.birthDate ?? null,
+    sex: d?.sex ?? null,
+    diabetesType: d?.diabetesType ?? null,
+    diagnosisYear: yearsToDiagnosisYear(d?.yearsWithDiabetes ?? null),
+  };
+  await db
+    .insert(profiles)
+    .values({ userId: user.id, ...data })
+    .onConflictDoUpdate({ target: profiles.userId, set: data });
 }

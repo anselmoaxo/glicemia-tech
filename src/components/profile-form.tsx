@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { updateProfile, type ProfileState } from "@/app/(app)/perfil/actions";
+import { HealthFields } from "@/components/health-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,9 @@ type Props = {
   name: string;
   email: string;
   birthDate: string | null;
+  sex: string | null;
   diabetesType: string | null;
+  yearsWithDiabetes: number | null;
   fontScale: number;
   alertEmailSelf: boolean;
   alertEmailFamily: boolean;
@@ -31,20 +34,9 @@ export function ProfileForm(p: Props) {
         <Label htmlFor="email" className="text-base">E-mail</Label>
         <Input id="email" value={p.email} className="h-12 text-base" disabled readOnly />
       </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="birthDate" className="text-base">Data de nascimento (opcional)</Label>
-        <Input id="birthDate" name="birthDate" type="date" defaultValue={p.birthDate ?? ""} className="h-12 text-base" />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="diabetesType" className="text-base">Tipo de diabetes (opcional)</Label>
-        <select id="diabetesType" name="diabetesType" defaultValue={p.diabetesType ?? "nao_informado"} className={selectClass}>
-          <option value="nao_informado">Prefiro não informar</option>
-          <option value="tipo1">Tipo 1</option>
-          <option value="tipo2">Tipo 2</option>
-          <option value="gestacional">Gestacional</option>
-          <option value="outro">Outro</option>
-        </select>
-      </div>
+      <HealthFields
+        defaults={{ birthDate: p.birthDate, sex: p.sex, diabetesType: p.diabetesType, yearsWithDiabetes: p.yearsWithDiabetes }}
+      />
       <div className="flex flex-col gap-2">
         <Label htmlFor="fontScale" className="text-base">Tamanho do texto</Label>
         <select id="fontScale" name="fontScale" defaultValue={p.fontScale} className={selectClass}>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { ProfileForm } from "@/components/profile-form";
+import { diagnosisYearToYears } from "@/lib/profile-utils";
 import { getProfile } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 import { deleteAccount } from "./actions";
@@ -18,7 +19,9 @@ export default async function PerfilPage() {
         name={user.name}
         email={user.email}
         birthDate={profile.birthDate}
+        sex={profile.sex}
         diabetesType={profile.diabetesType}
+        yearsWithDiabetes={diagnosisYearToYears(profile.diagnosisYear)}
         fontScale={profile.fontScale}
         alertEmailSelf={profile.alertEmailSelf}
         alertEmailFamily={profile.alertEmailFamily}

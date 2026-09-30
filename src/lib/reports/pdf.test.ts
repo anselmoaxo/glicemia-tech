@@ -7,6 +7,7 @@ const range = buildRange("2026-03-01", "2026-03-07", "America/Sao_Paulo");
 
 const data: ReportData = {
   ownerName: "Maria da Silva",
+  patientSummary: "66 anos · Feminino · Diabetes tipo 2, há 8 anos",
   timezone: "America/Sao_Paulo",
   range,
   targets: { geral: { min: 70, max: 180 } },

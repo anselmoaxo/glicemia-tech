@@ -8,6 +8,7 @@ import {
   insulinTypes,
   meals,
   medicationLogs,
+  profiles,
   medications,
   users,
 } from "@/db/schema";
@@ -15,6 +16,7 @@ import { classify, type GlucoseStatus } from "@/lib/glucose/classify";
 import { contextLabel } from "@/lib/glucose/contexts";
 import { getTargets } from "@/lib/glucose/queries";
 import { getTimezone } from "@/lib/profile";
+import { describePatient } from "@/lib/profile-utils";
 import { computeStats } from "./stats";
 import type { ReportRange } from "./range";
 
@@ -26,10 +28,19 @@ export type ReportData = Awaited<ReturnType<typeof getReportData>>;
 /** Reúne tudo que o relatório mostra. Sempre filtrado por userId. */
 export async function getReportData(userId: string, range: ReportRange) {
   const { from, to } = range;
-  const [tz, [owner], targets] = await Promise.all([
+  const [tz, [owner], targets, [profile]] = await Promise.all([
     getTimezone(userId),
     db.select({ name: users.name }).from(users).where(eq(users.id, userId)),
     getTargets(userId),
+    db
+      .select({
+        birthDate: profiles.birthDate,
+        sex: profiles.sex,
+        diabetesType: profiles.diabetesType,
+        diagnosisYear: profiles.diagnosisYear,
+      })
+      .from(profiles)
+      .where(eq(profiles.userId, userId)),
   ]);
 
   const [readingRows, mealRows, medRows, insulinRows] = await Promise.all([
@@ -91,6 +102,7 @@ export async function getReportData(userId: string, range: ReportRange) {
 
   return {
     ownerName: owner?.name ?? "Usuário",
+    patientSummary: profile ? describePatient(profile) : "",
     timezone: tz,
     range,
     targets,

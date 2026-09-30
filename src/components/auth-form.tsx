@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { recordConsent } from "@/app/(auth)/actions";
+import { completeSignup } from "@/app/(auth)/actions";
+import { HealthFields } from "@/components/health-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
-import { signInSchema, signUpSchema } from "@/lib/validation";
+import { signInSchema, signUpExtrasSchema, signUpSchema } from "@/lib/validation";
 
 export function AuthForm({ mode, next = "/inicio" }: { mode: "login" | "cadastro"; next?: string }) {
   const router = useRouter();
@@ -28,6 +29,17 @@ export function AuthForm({ mode, next = "/inicio" }: { mode: "login" | "cadastro
       return setError("É necessário aceitar o uso dos seus dados para criar a conta.");
     }
 
+    const extrasRaw = {
+      birthDate: String(form.get("birthDate") ?? ""),
+      sex: String(form.get("sex") ?? "nao_informado"),
+      diabetesType: String(form.get("diabetesType") ?? "nao_informado"),
+      yearsWithDiabetes: String(form.get("yearsWithDiabetes") ?? ""),
+    };
+    if (!isLogin) {
+      const extras = signUpExtrasSchema.safeParse(extrasRaw);
+      if (!extras.success) return setError(extras.error.issues[0].message);
+    }
+
     setPending(true);
     const res = isLogin
       ? await authClient.signIn.email(signInSchema.parse(raw))
@@ -39,7 +51,7 @@ export function AuthForm({ mode, next = "/inicio" }: { mode: "login" | "cadastro
         isLogin ? "Não foi possível entrar. Confira e-mail e senha; se estiver correto, a conta pode estar suspensa." : "Não foi possível criar a conta. Verifique os dados.",
       );
     }
-    if (!isLogin) await recordConsent();
+    if (!isLogin) await completeSignup(extrasRaw);
     setPending(false);
     router.replace(next);
     router.refresh();
@@ -68,6 +80,13 @@ export function AuthForm({ mode, next = "/inicio" }: { mode: "login" | "cadastro
           required
         />
       </div>
+      {!isLogin && (
+        <fieldset className="flex flex-col gap-5 border-t pt-5">
+          <legend className="mb-1 text-lg font-bold">Sobre você</legend>
+          <p className="text-base text-muted-foreground">Opcional. Ajuda a montar seu relatório para o médico e pode ser editado depois.</p>
+          <HealthFields idPrefix="su-" />
+        </fieldset>
+      )}
       {!isLogin && (
         <label className="flex items-start gap-3 text-base">
           <input type="checkbox" name="consent" className="mt-1 size-6 shrink-0" />

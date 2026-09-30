@@ -30,6 +30,7 @@ export function ReportView({ data }: { data: ReportData }) {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-3xl font-bold">Relatório de {data.ownerName}</h1>
+        {data.patientSummary && <p className="text-lg">{data.patientSummary}</p>}
         <p className="text-base text-muted-foreground">
           {br(range.fromDate)} a {br(range.toDate)} · somente leitura
         </p>
