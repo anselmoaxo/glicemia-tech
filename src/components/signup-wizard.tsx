@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Recaptcha, type RecaptchaHandle } from "@/components/recaptcha";
-import { completeSignup } from "@/app/(auth)/actions";
 import { AboutFields, DiabetesFields } from "@/components/health-fields";
 import { PhoneField } from "@/components/phone-field";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,9 @@ const diabetesSchema = healthFieldsSchema.pick({ diabetesType: true, yearsWithDi
 const label = (opts: readonly { value: string; label: string }[], v: string) =>
   opts.find((o) => o.value === v)?.label ?? "Não informado";
 
-export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string; siteKey?: string }) {
+type Props = { next?: string; siteKey?: string; verifyEmail?: boolean };
+
+export function SignupWizard({ next = "/inicio", siteKey = "", verifyEmail = false }: Props) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -43,6 +44,8 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
   const [pending, setPending] = useState(false);
   const [summary, setSummary] = useState<[string, string][]>([]);
   const [token, setToken] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
   const captcha = useRef<RecaptchaHandle>(null);
   const loginHref = `/login${next !== "/inicio" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
@@ -95,33 +98,72 @@ export function SignupWizard({ next = "/inicio", siteKey = "" }: { next?: string
     if (!extras.success) return setError(extras.error.issues[0].message);
     if (siteKey && !token) return setError(CAPTCHA_REQUIRED);
 
+    const phone = normalizePhone(v.phone ?? "");
     setPending(true);
-    const res = await authClient.signUp.email(account, {
+    // O servidor valida aceite e celular e cria o perfil junto com a conta.
+    const body = {
+      ...account,
+      phone: phone.ok ? phone.e164 : "",
+      birthDate: v.birthDate ?? "",
+      sex: v.sex ?? "nao_informado",
+      diabetesType: v.diabetesType ?? "nao_informado",
+      yearsWithDiabetes: v.yearsWithDiabetes ?? "",
+      consent: true,
+      callbackURL: "/email-confirmado",
+    } as Parameters<typeof authClient.signUp.email>[0];
+    const res = await authClient.signUp.email(body, {
       headers: siteKey && token ? { [CAPTCHA_HEADER]: token } : undefined,
     });
+    setPending(false);
     if (res.error) {
-      setPending(false);
       captcha.current?.reset(); // o token do captcha vale uma vez só
       // erro de captcha ou de limite: fica no último passo; senão (e-mail repetido etc.) volta ao primeiro
       if (!res.error.code?.match(/^(MISSING_RESPONSE|VERIFICATION_FAILED|UNKNOWN_ERROR)$/) && res.error.status !== 429) setStep(0);
       return setError(signupErrorMessage(res.error));
     }
-    await completeSignup({
-      birthDate: v.birthDate ?? "",
-      sex: v.sex ?? "nao_informado",
-      diabetesType: v.diabetesType ?? "nao_informado",
-      yearsWithDiabetes: v.yearsWithDiabetes ?? "",
-      phone: (() => { const p = normalizePhone(v.phone ?? ""); return p.ok ? p.e164 : ""; })(),
-    });
-    setPending(false);
+    if (verifyEmail) return setSentTo(account.email); // precisa confirmar o e-mail antes de entrar
     router.replace(next);
     router.refresh();
+  }
+
+  async function resend() {
+    if (!sentTo) return;
+    setResent(false);
+    const res = await authClient.sendVerificationEmail({ email: sentTo, callbackURL: "/email-confirmado" });
+    if (res.error) return setError("Não foi possível reenviar agora. Aguarde alguns minutos e tente de novo.");
+    setError(null);
+    setResent(true);
   }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault(); // Enter avança o passo; só o último passo cria a conta
     if (step < LAST) goNext();
     else void finish();
+  }
+
+  if (sentTo) {
+    return (
+      <div className="flex flex-col gap-5" role="status">
+        <h2 className="text-3xl font-bold tracking-tight">Confirme seu e-mail</h2>
+        <p className="text-lg">
+          Enviamos um link para <strong className="break-all">{sentTo}</strong>. Abra sua caixa de entrada (veja também o
+          spam) e clique no botão para ativar sua conta.
+        </p>
+        <p className="text-base text-muted-foreground">O link vale por 24 horas. Depois de confirmar, você já entra no app.</p>
+        {error && <p role="alert" className="text-base font-medium text-destructive">{error}</p>}
+        {resent && <p className="text-base font-semibold text-ok">Enviamos o e-mail de novo.</p>}
+        <button
+          type="button"
+          onClick={resend}
+          className="flex min-h-12 items-center justify-center rounded-lg border-2 text-base font-semibold"
+        >
+          Reenviar o e-mail
+        </button>
+        <Link href={loginHref} className="flex min-h-12 items-center justify-center text-base font-semibold underline underline-offset-4">
+          Já confirmei, quero entrar
+        </Link>
+      </div>
+    );
   }
 
   return (

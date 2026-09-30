@@ -15,6 +15,9 @@ function common(e: NonNullable<AuthError>): string | null {
 }
 
 export function loginErrorMessage(e: AuthError) {
+  if (e?.code === "EMAIL_NOT_VERIFIED") {
+    return "Confirme seu e-mail para entrar. Enviamos um novo link para a sua caixa de entrada (veja também o spam).";
+  }
   return (e && common(e)) ?? "Não foi possível entrar. Confira e-mail e senha; se estiver correto, a conta pode estar suspensa.";
 }
 

@@ -4,19 +4,18 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const signUp = vi.fn();
-const completeSignup = vi.fn();
+const sendVerification = vi.fn();
 const replace = vi.fn();
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, refresh: vi.fn() }) }));
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
-vi.mock("@/lib/auth-client", () => ({ authClient: { signUp: { email: (...a: unknown[]) => signUp(...a) } } }));
+vi.mock("@/lib/auth-client", () => ({ authClient: { signUp: { email: (...a: unknown[]) => signUp(...a) }, sendVerificationEmail: (...a: unknown[]) => sendVerification(...a) } }));
 vi.mock("@/components/recaptcha", () => ({
   Recaptcha: ({ onChange, ref }: { onChange: (t: string | null) => void; ref?: { current: unknown } }) => {
     if (ref) ref.current = { reset: () => onChange(null) };
     return <button type="button" onClick={() => onChange("token-abc")}>marcar captcha</button>;
   },
 }));
-vi.mock("@/app/(auth)/actions", () => ({ completeSignup: (...a: unknown[]) => completeSignup(...a) }));
 
 import { SignupWizard } from "./signup-wizard";
 
@@ -25,7 +24,7 @@ const heading = () => screen.getByRole("heading", { level: 2 }).textContent;
 
 beforeEach(() => {
   signUp.mockResolvedValue({ error: null });
-  completeSignup.mockResolvedValue(undefined);
+  sendVerification.mockResolvedValue({ error: null });
 });
 afterEach(() => {
   cleanup();
@@ -85,16 +84,20 @@ describe("SignupWizard", () => {
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/inicio"));
     expect(signUp).toHaveBeenCalledWith(
-      { name: "Maria Silva", email: "maria@example.com", password: "senha-segura-1" },
+      {
+        name: "Maria Silva",
+        email: "maria@example.com",
+        password: "senha-segura-1",
+        phone: "+5511912345678",
+        birthDate: "1960-03-10",
+        sex: "feminino",
+        diabetesType: "tipo2",
+        yearsWithDiabetes: "8",
+        consent: true,
+        callbackURL: "/email-confirmado",
+      },
       { headers: undefined }, // sem chave do captcha configurada
     );
-    expect(completeSignup).toHaveBeenCalledWith({
-      birthDate: "1960-03-10",
-      sex: "feminino",
-      diabetesType: "tipo2",
-      yearsWithDiabetes: "8",
-      phone: "+5511912345678",
-    });
   });
 
   it("permite pular os passos opcionais e voltar sem perder o que foi digitado", async () => {
@@ -137,7 +140,6 @@ describe("SignupWizard", () => {
 
     await waitFor(() => expect(heading()).toBe("Crie seu acesso"));
     expect(screen.getByRole("alert").textContent).toMatch(/já tem cadastro/i);
-    expect(completeSignup).not.toHaveBeenCalled();
   });
 
   it("celular é obrigatório e confere o formato antes de avançar", async () => {
@@ -208,5 +210,24 @@ describe("SignupWizard", () => {
     await user.click(screen.getByRole("button", { name: /Criar minha conta/ }));
     await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/robô/));
     expect(heading()).toBe("Quase lá");
+  });
+
+  it("com confirmação de e-mail exigida: mostra a tela de confirmação e não entra no app", async () => {
+    const user = userEvent.setup();
+    render(<SignupWizard verifyEmail />);
+    await fillStep1(user);
+    await user.click(screen.getByRole("button", { name: "Continuar" }));
+    await user.click(screen.getByRole("button", { name: "Pular este passo" }));
+    await user.click(screen.getByRole("button", { name: "Pular este passo" }));
+    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("button", { name: /Criar minha conta/ }));
+
+    await waitFor(() => expect(heading()).toBe("Confirme seu e-mail"));
+    expect(screen.getByText("maria@example.com")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Reenviar o e-mail" }));
+    await waitFor(() => expect(sendVerification).toHaveBeenCalledWith({ email: "maria@example.com", callbackURL: "/email-confirmado" }));
+    expect(await screen.findByText(/Enviamos o e-mail de novo/)).toBeTruthy();
   });
 });

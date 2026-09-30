@@ -52,7 +52,8 @@ O app envia e-mail em dois casos: **convite de familiar** e **alerta de glicemia
    | `EMAIL_FROM` | `Glicose Tech <avisos@seudominio.com.br>` | comum |
 
    O endereço do `EMAIL_FROM` deve ser do domínio verificado. Depois faça **Redeploy** (Deployments > ... > Redeploy).
-4. **Testar.** Em *Compartilhar com familiar*, convide um e-mail seu: a mensagem deve chegar. Se aparecer o link na tela em vez de "Convite enviado por e-mail", a chave ou o remetente estão errados (veja *Logs* no painel do Resend).
+4. **Esqueci minha senha e confirmação do e-mail.** Com a chave configurada, o cadastro envia um e-mail de confirmação e o login ganha o link *Esqueci minha senha* (link de 1 hora, uso único; trocar a senha desconecta os outros aparelhos). Por padrão a confirmação **não** é obrigatória para entrar. Quando os e-mails estiverem chegando, defina `REQUIRE_EMAIL_VERIFICATION=true` e faça Redeploy; antes, marque as contas existentes como confirmadas: `update users set email_verified = true;`.
+5. **Testar.** Em *Compartilhar com familiar*, convide um e-mail seu: a mensagem deve chegar. Se aparecer o link na tela em vez de "Convite enviado por e-mail", a chave ou o remetente estão errados (veja *Logs* no painel do Resend).
 
 Atalho: no Marketplace da Vercel existe a integração **Resend**, que cria a `RESEND_API_KEY` no projeto sozinha; ainda assim é preciso verificar o domínio e definir o `EMAIL_FROM`.
 

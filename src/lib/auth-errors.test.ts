@@ -15,6 +15,9 @@ describe("mensagens de erro de autenticação", () => {
     expect(m).toMatch(/e-mail e senha/);
     expect(m).not.toMatch(/não existe|não encontrado/i);
   });
+  it("e-mail ainda não confirmado orienta a abrir o link", () => {
+    expect(loginErrorMessage({ status: 403, code: "EMAIL_NOT_VERIFIED" })).toMatch(/Confirme seu e-mail/);
+  });
   it("sem erro de detalhe cai no texto padrão", () => {
     expect(loginErrorMessage(undefined)).toMatch(/Não foi possível entrar/);
     expect(signupErrorMessage(null)).toMatch(/criar a conta/);

@@ -29,7 +29,7 @@ export function AuthForm({ next = "/inicio", siteKey = "" }: { next?: string; si
     if (siteKey && !token) return setError(CAPTCHA_REQUIRED);
 
     setPending(true);
-    const res = await authClient.signIn.email(parsed.data, {
+    const res = await authClient.signIn.email({ ...parsed.data, callbackURL: "/email-confirmado" }, {
       headers: siteKey && token ? { [CAPTCHA_HEADER]: token } : undefined,
     });
     setPending(false);
@@ -52,6 +52,9 @@ export function AuthForm({ next = "/inicio", siteKey = "" }: { next?: string; si
         <Label htmlFor="password" className="text-base">Senha</Label>
         <Input id="password" name="password" type="password" autoComplete="current-password" className="h-12 text-base" required />
       </div>
+      <Link href="/esqueci-senha" className="-mt-2 flex min-h-12 items-center text-base font-semibold underline underline-offset-4">
+        Esqueci minha senha
+      </Link>
       {siteKey && <Recaptcha ref={captcha} siteKey={siteKey} onChange={setToken} />}
       {error && <p role="alert" className="text-base font-medium text-destructive">{error}</p>}
       <Button type="submit" disabled={pending} className="h-14 text-lg">
