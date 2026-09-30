@@ -38,6 +38,26 @@ TEST_DATABASE_URL=postgresql://... npm test
    `BETTER_AUTH_URL` (domínio final, com `https://`), `RESEND_API_KEY` e `EMAIL_FROM` (opcionais).
 3. Para enviar e-mails a qualquer destinatário, verifique seu domínio no Resend.
 
+## E-mail com Resend
+
+O app envia e-mail em dois casos: **convite de familiar** e **alerta de glicemia fora da faixa**. Sem configurar nada ele continua funcionando (o link do convite aparece na tela e os alertas por e-mail não saem).
+
+1. **Conta e domínio.** Em <https://resend.com> crie a conta, vá em **Domains > Add Domain** e informe um domínio seu (ex.: `seudominio.com.br`; pode ser um subdomínio, como `avisos.seudominio.com.br`). O Resend mostra registros DNS (SPF, DKIM e, se quiser, DMARC): cadastre-os no provedor do domínio e clique em **Verify**. Domínios `*.vercel.app` não servem, pois não dá para editar o DNS deles.
+2. **Chave.** Em **API Keys > Create API Key**, permissão **Sending access**, e copie a chave (`re_...`): ela só aparece uma vez.
+3. **Vercel.** Em **Project > Settings > Environment Variables** crie, para *Production* (e *Preview*, se quiser):
+
+   | Nome | Valor | Tipo |
+   | --- | --- | --- |
+   | `RESEND_API_KEY` | a chave `re_...` | **Sensitive** |
+   | `EMAIL_FROM` | `Glicose Tech <avisos@seudominio.com.br>` | comum |
+
+   O endereço do `EMAIL_FROM` deve ser do domínio verificado. Depois faça **Redeploy** (Deployments > ... > Redeploy).
+4. **Testar.** Em *Compartilhar com familiar*, convide um e-mail seu: a mensagem deve chegar. Se aparecer o link na tela em vez de "Convite enviado por e-mail", a chave ou o remetente estão errados (veja *Logs* no painel do Resend).
+
+Atalho: no Marketplace da Vercel existe a integração **Resend**, que cria a `RESEND_API_KEY` no projeto sozinha; ainda assim é preciso verificar o domínio e definir o `EMAIL_FROM`.
+
+Para testar sem domínio, use `EMAIL_FROM=Glicose Tech <onboarding@resend.dev>`: o Resend só entrega para o e-mail da sua própria conta.
+
 ## Proteção do login
 
 - **Bloqueio por conta:** 5 senhas erradas para o mesmo e-mail travam o login por 15 minutos (vale também para e-mails inexistentes; o e-mail é guardado só como HMAC).
