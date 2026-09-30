@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Glicose Tech
 
-## Getting Started
+Web app para acompanhar glicemia, alimentação, medicamentos e insulina, com metas próprias,
+gráficos, relatórios em PDF e compartilhamento com familiares e médico.
 
-First, run the development server:
+> O app organiza registros. Não diagnostica, não sugere doses e não substitui acompanhamento médico.
+
+Stack: Next.js 16 · TypeScript · Tailwind · shadcn/ui · Neon Postgres · Drizzle · Better Auth · Resend · Recharts · React PDF.
+
+## Rodar localmente
 
 ```bash
+npm install
+cp .env.example .env.local   # preencha DATABASE_URL e BETTER_AUTH_SECRET
+npm run db:migrate           # aplica as migrations em ./drizzle
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Comando | O que faz |
+| --- | --- |
+| `npm run lint` / `typecheck` / `test` | Verificações |
+| `npm run build` | Build de produção |
+| `npm run db:generate` | Gera migration após mudar `src/db/schema` |
+| `npm run db:migrate` | Aplica migrations |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Testes de isolamento entre usuários (precisam de um banco **de teste** com migrations aplicadas):
 
-## Learn More
+```bash
+TEST_DATABASE_URL=postgresql://... npm test
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy na Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Crie o banco no Neon e rode `npm run db:migrate` com a `DATABASE_URL` dele.
+2. Importe o repositório na Vercel e defina as variáveis: `DATABASE_URL`, `BETTER_AUTH_SECRET`,
+   `BETTER_AUTH_URL` (domínio final, com `https://`), `RESEND_API_KEY` e `EMAIL_FROM` (opcionais).
+3. Para enviar e-mails a qualquer destinatário, verifique seu domínio no Resend.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Segurança e privacidade
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Toda consulta filtra pelo `userId` da sessão; acesso de familiar passa por `getAccessibleModules`.
+- Tokens de convite e de link do médico: 256 bits, só o hash fica no banco, com expiração e revogação.
+- Links do médico respondem com `no-store`, `no-referrer` e `noindex`.
+- O service worker não faz cache: dados de saúde não ficam no cache do navegador.
+- Exclusão de conta no Perfil apaga todos os dados (cascade).
