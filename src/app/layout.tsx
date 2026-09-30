@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   description: "Acompanhe sua glicemia, alimentação e medicamentos de forma simples.",
   applicationName: "Glicose Tech",
   appleWebApp: { capable: true, title: "Glicose", statusBarStyle: "default" },
-  icons: { icon: "/icons/192", apple: "/icons/180" },
 };
 
 export const viewport: Viewport = {

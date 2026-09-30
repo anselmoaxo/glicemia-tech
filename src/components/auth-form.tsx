@@ -3,107 +3,54 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { completeSignup } from "@/app/(auth)/actions";
-import { HealthFields } from "@/components/health-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
-import { signInSchema, signUpExtrasSchema, signUpSchema } from "@/lib/validation";
+import { signInSchema } from "@/lib/validation";
 
-export function AuthForm({ mode, next = "/inicio" }: { mode: "login" | "cadastro"; next?: string }) {
+/** Formulário de entrada. O cadastro é o passo a passo em signup-wizard.tsx. */
+export function AuthForm({ next = "/inicio" }: { next?: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const isLogin = mode === "login";
-  const other = `${isLogin ? "/cadastro" : "/login"}${next !== "/inicio" ? `?next=${encodeURIComponent(next)}` : ""}`;
+  const signupHref = `/cadastro${next !== "/inicio" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    const form = new FormData(e.currentTarget);
-    const raw = Object.fromEntries(form);
-    const parsed = isLogin ? signInSchema.safeParse(raw) : signUpSchema.safeParse(raw);
+    const parsed = signInSchema.safeParse(Object.fromEntries(new FormData(e.currentTarget)));
     if (!parsed.success) return setError(parsed.error.issues[0].message);
-    if (!isLogin && form.get("consent") !== "on") {
-      return setError("É necessário aceitar o uso dos seus dados para criar a conta.");
-    }
-
-    const extrasRaw = {
-      birthDate: String(form.get("birthDate") ?? ""),
-      sex: String(form.get("sex") ?? "nao_informado"),
-      diabetesType: String(form.get("diabetesType") ?? "nao_informado"),
-      yearsWithDiabetes: String(form.get("yearsWithDiabetes") ?? ""),
-    };
-    if (!isLogin) {
-      const extras = signUpExtrasSchema.safeParse(extrasRaw);
-      if (!extras.success) return setError(extras.error.issues[0].message);
-    }
 
     setPending(true);
-    const res = isLogin
-      ? await authClient.signIn.email(signInSchema.parse(raw))
-      : await authClient.signUp.email(signUpSchema.parse(raw));
+    const res = await authClient.signIn.email(parsed.data);
+    setPending(false);
 
     if (res.error) {
-      setPending(false);
-      return setError(
-        isLogin ? "Não foi possível entrar. Confira e-mail e senha; se estiver correto, a conta pode estar suspensa." : "Não foi possível criar a conta. Verifique os dados.",
-      );
+      return setError("Não foi possível entrar. Confira e-mail e senha; se estiver correto, a conta pode estar suspensa.");
     }
-    if (!isLogin) await completeSignup(extrasRaw);
-    setPending(false);
     router.replace(next);
     router.refresh();
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      {!isLogin && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="name" className="text-base">Nome</Label>
-          <Input id="name" name="name" autoComplete="name" className="h-12 text-base" required />
-        </div>
-      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor="email" className="text-base">E-mail</Label>
         <Input id="email" name="email" type="email" autoComplete="email" className="h-12 text-base" required />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="password" className="text-base">Senha</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete={isLogin ? "current-password" : "new-password"}
-          className="h-12 text-base"
-          required
-        />
+        <Input id="password" name="password" type="password" autoComplete="current-password" className="h-12 text-base" required />
       </div>
-      {!isLogin && (
-        <fieldset className="flex flex-col gap-5 border-t pt-5">
-          <legend className="mb-1 text-lg font-bold">Sobre você</legend>
-          <p className="text-base text-muted-foreground">Opcional. Ajuda a montar seu relatório para o médico e pode ser editado depois.</p>
-          <HealthFields idPrefix="su-" />
-        </fieldset>
-      )}
-      {!isLogin && (
-        <label className="flex items-start gap-3 text-base">
-          <input type="checkbox" name="consent" className="mt-1 size-6 shrink-0" />
-          <span>
-            Concordo com o tratamento dos meus dados de saúde para o funcionamento do app, conforme a LGPD.
-            Posso excluir minha conta e meus dados a qualquer momento no Perfil.
-          </span>
-        </label>
-      )}
       {error && <p role="alert" className="text-base font-medium text-destructive">{error}</p>}
       <Button type="submit" disabled={pending} className="h-14 text-lg">
-        {pending ? "Aguarde..." : isLogin ? "Entrar" : "Criar conta"}
+        {pending ? "Aguarde..." : "Entrar"}
       </Button>
       <p className="text-center text-base">
-        {isLogin ? "Ainda não tem conta? " : "Já tem conta? "}
-        <Link href={other} className="font-semibold underline underline-offset-4">
-          {isLogin ? "Criar conta" : "Entrar"}
+        Ainda não tem conta?{" "}
+        <Link href={signupHref} className="font-semibold underline underline-offset-4">
+          Criar conta
         </Link>
       </p>
     </form>

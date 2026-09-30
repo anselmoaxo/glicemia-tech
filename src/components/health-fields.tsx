@@ -12,8 +12,10 @@ export type HealthDefaults = {
 const select =
   "h-12 w-full rounded-lg border border-input bg-background px-3 text-base focus-visible:outline-2 focus-visible:outline-ring";
 
-/** Campos opcionais sobre o paciente. Sem estado: funciona em formulários de servidor e de cliente. */
-export function HealthFields({ defaults = {}, idPrefix = "" }: { defaults?: HealthDefaults; idPrefix?: string }) {
+type FieldsProps = { defaults?: HealthDefaults; idPrefix?: string };
+
+/** Nascimento e sexo. Sem estado: funciona em formulários de servidor e de cliente. */
+export function AboutFields({ defaults = {}, idPrefix = "" }: FieldsProps) {
   const id = (n: string) => `${idPrefix}${n}`;
   return (
     <>
@@ -39,6 +41,15 @@ export function HealthFields({ defaults = {}, idPrefix = "" }: { defaults?: Heal
         </select>
       </div>
 
+    </>
+  );
+}
+
+/** Tipo de diabetes e tempo de diagnóstico. */
+export function DiabetesFields({ defaults = {}, idPrefix = "" }: FieldsProps) {
+  const id = (n: string) => `${idPrefix}${n}`;
+  return (
+    <>
       <div className="flex flex-col gap-2">
         <Label htmlFor={id("diabetesType")} className="text-base">Tipo de diabetes</Label>
         <select
@@ -70,6 +81,16 @@ export function HealthFields({ defaults = {}, idPrefix = "" }: { defaults?: Heal
           Em anos. Use 0 para menos de 1 ano. Se não souber, deixe em branco.
         </p>
       </div>
+    </>
+  );
+}
+
+/** Os quatro campos juntos (Perfil). */
+export function HealthFields(props: FieldsProps) {
+  return (
+    <>
+      <AboutFields {...props} />
+      <DiabetesFields {...props} />
     </>
   );
 }

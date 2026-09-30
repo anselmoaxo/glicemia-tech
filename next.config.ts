@@ -11,6 +11,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@react-pdf/renderer"],
   poweredByHeader: false,
+  // Navegadores antigos pedem /favicon.ico; apontamos para o ícone da marca.
+  async redirects() {
+    return [{ source: "/favicon.ico", destination: "/icon", permanent: false }];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
