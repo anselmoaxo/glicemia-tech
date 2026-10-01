@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, BadgeCheck, Inbox, LayoutDashboard, LogOut, Mail, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BadgeCheck, History, Inbox, LayoutDashboard, LogOut, Mail, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -11,6 +11,7 @@ const items: { href: string; label: string; icon: LucideIcon; exact?: boolean }[
   { href: "/admin/solicitacoes", label: "Solicitações", icon: Inbox },
   { href: "/admin/profissionais", label: "Profissionais", icon: BadgeCheck },
   { href: "/admin/emails", label: "E-mails", icon: Mail },
+  { href: "/admin/auditoria", label: "Auditoria", icon: History },
 ];
 
 /** Navegação própria da administração: menu lateral no desktop, faixa rolável no celular. */

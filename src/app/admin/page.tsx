@@ -35,12 +35,14 @@ export default async function AdminPage() {
     <div className="flex flex-col gap-8">
       <h1 className="sr-only">Resumo da administração</h1>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat label="Usuários" value={o.total} hint={`${o.suspended} suspensos`} />
-        <Stat label="Novos em 7 dias" value={o.new7} hint={`${o.new30} em 30 dias`} />
-        <Stat label="Ativos em 7 dias" value={o.active7} hint="com sessão recente" />
-        <Stat label="Medições no total" value={o.readings} hint="apenas a contagem" />
-        <Stat label="Links de médico ativos" value={o.shareLinks} />
+        <Stat label="Contas" value={o.total} hint={`${o.active} ativas · ${o.paused} pausadas`} />
+        <Stat label="Novas em 7 dias" value={o.new7} hint={`${o.new30} em 30 dias`} />
+        <Stat label="Acessaram em 7 dias" value={o.active7} hint="com sessão recente" />
+        <Stat label="Com duas etapas" value={o.with2fa} />
+        <Stat label="E-mail não confirmado" value={o.unverified} />
         <Stat label="Convites pendentes" value={o.pendingInvites} />
+        <Stat label="Solicitações abertas" value={o.openRequests} hint="suporte, privacidade, exclusão" />
+        <Stat label="Profissionais a conferir" value={o.pendingPros} />
       </dl>
 
       <section aria-labelledby="seguranca" className="rounded-2xl border bg-card p-4">
@@ -98,7 +100,10 @@ export default async function AdminPage() {
       </section>
 
       <section aria-labelledby="auditoria">
-        <h2 id="auditoria" className="mb-3 text-xl font-bold">Ações administrativas recentes</h2>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 id="auditoria" className="text-xl font-bold">Ações administrativas recentes</h2>
+          <a href="/admin/auditoria" className="text-base underline underline-offset-4">Ver tudo</a>
+        </div>
         {o.logs.length === 0 ? (
           <p className="text-base text-muted-foreground">Nenhuma ação registrada.</p>
         ) : (

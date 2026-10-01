@@ -16,7 +16,7 @@ export const fmtDateTime = (d: Date | null) =>
     : "—";
 
 export const ACTION_LABEL = {
-  suspend: "Suspendeu",
+  suspend: "Pausou",
   unsuspend: "Reativou",
   delete: "Excluiu",
   request_update: "Atualizou solicitação de",

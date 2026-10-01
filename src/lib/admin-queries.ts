@@ -4,22 +4,23 @@ import { db } from "@/db";
 import {
   adminAuditLogs,
   familyMembers,
-  glucoseReadings,
-  insulinLogs,
   loginAttempts,
-  meals,
-  medications,
   notifications,
+  professionalProfiles,
   sessions,
-  sharedReports,
+  supportRequests,
   users,
 } from "@/db/schema";
 
-// Só metadados e contagens: o painel administrativo nunca lê o conteúdo dos registros de saúde.
+// Só dados de CONTA e de funcionamento do app. O painel nunca lê registros de saúde (nem contagens deles).
 
 const DAY = 24 * 60 * 60 * 1000;
 export const ADMIN_TZ = "America/Sao_Paulo";
 export const USERS_PAGE_SIZE = 20;
+export const AUDIT_PAGE_SIZE = 30;
+
+export type UserFilter = "todos" | "ativos" | "pausados";
+export const parseUserFilter = (v: unknown): UserFilter => (v === "ativos" || v === "pausados" ? v : "todos");
 
 const one = async (q: Promise<{ n: number }[]>) => (await q)[0]?.n ?? 0;
 
@@ -29,80 +30,63 @@ export async function getOverview() {
   const d30 = new Date(now.getTime() - 30 * DAY);
   const d14 = new Date(now.getTime() - 14 * DAY);
 
-  const [total, suspended, new7, new30, active7, readings, shareLinks, pendingInvites, failedEmails, locked, signups, logs] =
+  const [total, paused, new7, new30, active7, unverified, with2fa, pendingInvites, openRequests, pendingPros, failedEmails, locked, signups, logs] =
     await Promise.all([
       one(db.select({ n: count() }).from(users)),
       one(db.select({ n: count() }).from(users).where(isNotNull(users.suspendedAt))),
       one(db.select({ n: count() }).from(users).where(gte(users.createdAt, d7))),
       one(db.select({ n: count() }).from(users).where(gte(users.createdAt, d30))),
-      one(
-        db
-          .select({ n: sql<number>`count(distinct ${sessions.userId})::int` })
-          .from(sessions)
-          .where(gte(sessions.updatedAt, d7)),
-      ),
-      one(db.select({ n: count() }).from(glucoseReadings)),
-      one(
-        db
-          .select({ n: count() })
-          .from(sharedReports)
-          .where(and(isNull(sharedReports.revokedAt), gt(sharedReports.expiresAt, now))),
-      ),
-      one(
-        db
-          .select({ n: count() })
-          .from(familyMembers)
-          .where(and(eq(familyMembers.status, "pending"), gt(familyMembers.inviteExpiresAt, now))),
-      ),
-      one(
-        db
-          .select({ n: count() })
-          .from(notifications)
-          .where(and(eq(notifications.status, "failed"), gte(notifications.createdAt, d7))),
-      ),
+      one(db.select({ n: sql<number>`count(distinct ${sessions.userId})::int` }).from(sessions).where(gte(sessions.updatedAt, d7))),
+      one(db.select({ n: count() }).from(users).where(eq(users.emailVerified, false))),
+      one(db.select({ n: count() }).from(users).where(eq(users.twoFactorEnabled, true))),
+      one(db.select({ n: count() }).from(familyMembers).where(and(eq(familyMembers.status, "pending"), gt(familyMembers.inviteExpiresAt, now)))),
+      one(db.select({ n: count() }).from(supportRequests).where(eq(supportRequests.status, "open"))),
+      one(db.select({ n: count() }).from(professionalProfiles).where(eq(professionalProfiles.verificationStatus, "pending"))),
+      one(db.select({ n: count() }).from(notifications).where(and(eq(notifications.status, "failed"), gte(notifications.createdAt, d7)))),
       one(db.select({ n: count() }).from(loginAttempts).where(gt(loginAttempts.lockedUntil, now))),
       db
-        .select({
-          day: sql<string>`to_char(${users.createdAt} at time zone ${ADMIN_TZ}, 'YYYY-MM-DD')`,
-          n: count(),
-        })
+        .select({ day: sql<string>`to_char(${users.createdAt} at time zone ${ADMIN_TZ}, 'YYYY-MM-DD')`, n: count() })
         .from(users)
         .where(gte(users.createdAt, d14))
         .groupBy(sql`1`),
       db
-        .select({
-          id: adminAuditLogs.id,
-          action: adminAuditLogs.action,
-          targetEmail: adminAuditLogs.targetEmail,
-          createdAt: adminAuditLogs.createdAt,
-        })
+        .select({ id: adminAuditLogs.id, action: adminAuditLogs.action, targetEmail: adminAuditLogs.targetEmail, createdAt: adminAuditLogs.createdAt })
         .from(adminAuditLogs)
         .orderBy(desc(adminAuditLogs.createdAt))
-        .limit(10),
+        .limit(8),
     ]);
 
-  return { total, suspended, new7, new30, active7, readings, shareLinks, pendingInvites, failedEmails, locked, signups, logs };
+  return { total, paused, active: total - paused, new7, new30, active7, unverified, with2fa, pendingInvites, openRequests, pendingPros, failedEmails, locked, signups, logs };
 }
 
-export async function listUsers(query: string, page: number) {
+export async function listUsers(query: string, page: number, filter: UserFilter = "todos") {
   const q = query.trim().slice(0, 80).replace(/[\\%_]/g, "\\$&");
-  const rows = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      createdAt: users.createdAt,
-      suspendedAt: users.suspendedAt,
-      lastActive: max(sessions.updatedAt),
-    })
-    .from(users)
-    .leftJoin(sessions, eq(sessions.userId, users.id))
-    .where(q ? or(ilike(users.email, `%${q}%`), ilike(users.name, `%${q}%`)) : undefined)
-    .groupBy(users.id)
-    .orderBy(desc(users.createdAt))
-    .limit(USERS_PAGE_SIZE + 1)
-    .offset((page - 1) * USERS_PAGE_SIZE);
-  return { items: rows.slice(0, USERS_PAGE_SIZE), hasMore: rows.length > USERS_PAGE_SIZE };
+  const where = and(
+    q ? or(ilike(users.email, `%${q}%`), ilike(users.name, `%${q}%`)) : undefined,
+    filter === "ativos" ? isNull(users.suspendedAt) : filter === "pausados" ? isNotNull(users.suspendedAt) : undefined,
+  );
+  const [rows, [{ total }]] = await Promise.all([
+    db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        emailVerified: users.emailVerified,
+        twoFactorEnabled: users.twoFactorEnabled,
+        createdAt: users.createdAt,
+        suspendedAt: users.suspendedAt,
+        lastActive: max(sessions.updatedAt),
+      })
+      .from(users)
+      .leftJoin(sessions, eq(sessions.userId, users.id))
+      .where(where)
+      .groupBy(users.id)
+      .orderBy(desc(users.createdAt))
+      .limit(USERS_PAGE_SIZE + 1)
+      .offset((page - 1) * USERS_PAGE_SIZE),
+    db.select({ total: count() }).from(users).where(where),
+  ]);
+  return { items: rows.slice(0, USERS_PAGE_SIZE), hasMore: rows.length > USERS_PAGE_SIZE, total };
 }
 
 export async function getUserSummary(id: string) {
@@ -111,6 +95,7 @@ export async function getUserSummary(id: string) {
       id: users.id,
       name: users.name,
       email: users.email,
+      emailVerified: users.emailVerified,
       createdAt: users.createdAt,
       suspendedAt: users.suspendedAt,
       twoFactorEnabled: users.twoFactorEnabled,
@@ -119,14 +104,22 @@ export async function getUserSummary(id: string) {
     .where(eq(users.id, id));
   if (!user) return null;
 
-  const [readings, mealsCount, meds, insulin, links, lastActive] = await Promise.all([
-    one(db.select({ n: count() }).from(glucoseReadings).where(eq(glucoseReadings.userId, id))),
-    one(db.select({ n: count() }).from(meals).where(eq(meals.userId, id))),
-    one(db.select({ n: count() }).from(medications).where(eq(medications.userId, id))),
-    one(db.select({ n: count() }).from(insulinLogs).where(eq(insulinLogs.userId, id))),
+  const [links, openRequests, activeSessions, lastActive] = await Promise.all([
     one(db.select({ n: count() }).from(familyMembers).where(eq(familyMembers.ownerId, id))),
+    one(db.select({ n: count() }).from(supportRequests).where(and(eq(supportRequests.userId, id), sql`${supportRequests.status} <> 'done'`))),
+    one(db.select({ n: count() }).from(sessions).where(and(eq(sessions.userId, id), gt(sessions.expiresAt, new Date())))),
     db.select({ at: max(sessions.updatedAt) }).from(sessions).where(eq(sessions.userId, id)),
   ]);
 
-  return { ...user, counts: { readings, meals: mealsCount, medications: meds, insulin, familyLinks: links }, lastActive: lastActive[0]?.at ?? null };
+  return { ...user, familyLinks: links, openRequests, activeSessions, lastActive: lastActive[0]?.at ?? null };
+}
+
+export async function listAudit(page: number) {
+  const rows = await db
+    .select({ id: adminAuditLogs.id, action: adminAuditLogs.action, targetEmail: adminAuditLogs.targetEmail, createdAt: adminAuditLogs.createdAt })
+    .from(adminAuditLogs)
+    .orderBy(desc(adminAuditLogs.createdAt))
+    .limit(AUDIT_PAGE_SIZE + 1)
+    .offset((page - 1) * AUDIT_PAGE_SIZE);
+  return { items: rows.slice(0, AUDIT_PAGE_SIZE), hasMore: rows.length > AUDIT_PAGE_SIZE };
 }

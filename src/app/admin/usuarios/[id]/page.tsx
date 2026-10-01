@@ -9,6 +9,13 @@ import { suspendUser, unsuspendUser } from "../../actions";
 
 export const metadata: Metadata = { title: "Usuário" };
 
+const Item = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div>
+    <dt className="text-muted-foreground">{label}</dt>
+    <dd className="font-semibold">{value}</dd>
+  </div>
+);
+
 export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usuarios/[id]">) {
   const admin = await requireAdmin();
   const { id } = await params;
@@ -17,7 +24,6 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
   if (!u) notFound();
 
   const protectedAccount = u.id === admin.id || isAdmin(u.id);
-  const c = u.counts;
 
   return (
     <section className="flex flex-col gap-6">
@@ -27,43 +33,46 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
 
       <div>
         <h1 className="text-3xl font-bold">{u.name}</h1>
-        <p className="text-base break-all text-muted-foreground">{u.email}</p>
-        {u.suspendedAt && (
-          <p className="mt-2 inline-block rounded-full border border-high/30 bg-high-soft px-3 py-1 text-base font-semibold text-high">
-            Suspenso em {fmtDateTime(u.suspendedAt)}
-          </p>
-        )}
+        <p className="break-all text-base text-muted-foreground">{u.email}</p>
+        <p className="mt-2 flex flex-wrap gap-2">
+          {u.suspendedAt ? (
+            <span className="rounded-full border border-high/30 bg-high-soft px-3 py-1 text-base font-semibold text-high">Pausado em {fmtDateTime(u.suspendedAt)}</span>
+          ) : (
+            <span className="rounded-full border border-ok/30 bg-ok-soft px-3 py-1 text-base font-semibold text-ok">Ativo</span>
+          )}
+          {isAdmin(u.id) && <span className="rounded-full border border-primary/30 bg-accent px-3 py-1 text-base font-semibold text-accent-foreground">Administrador</span>}
+        </p>
       </div>
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 text-base">
-        <div><dt className="text-muted-foreground">Cadastro</dt><dd className="font-semibold">{fmtDateTime(u.createdAt)}</dd></div>
-        <div><dt className="text-muted-foreground">Último acesso</dt><dd className="font-semibold">{fmtDateTime(u.lastActive)}</dd></div>
-        <div><dt className="text-muted-foreground">Duas etapas</dt><dd className="font-semibold">{u.twoFactorEnabled ? "Ativada" : "Desativada"}</dd></div>
-        <div><dt className="text-muted-foreground">Medições</dt><dd className="font-semibold">{c.readings}</dd></div>
-        <div><dt className="text-muted-foreground">Refeições</dt><dd className="font-semibold">{c.meals}</dd></div>
-        <div><dt className="text-muted-foreground">Medicamentos</dt><dd className="font-semibold">{c.medications}</dd></div>
-        <div><dt className="text-muted-foreground">Aplicações de insulina</dt><dd className="font-semibold">{c.insulin}</dd></div>
-        <div><dt className="text-muted-foreground">Familiares convidados</dt><dd className="font-semibold">{c.familyLinks}</dd></div>
+        <Item label="Cadastro" value={fmtDateTime(u.createdAt)} />
+        <Item label="Último acesso" value={fmtDateTime(u.lastActive)} />
+        <Item label="E-mail confirmado" value={u.emailVerified ? "Sim" : "Não"} />
+        <Item label="Duas etapas" value={u.twoFactorEnabled ? "Ativada" : "Desativada"} />
+        <Item label="Papel" value={isAdmin(u.id) ? "Administrador" : "Usuário"} />
+        <Item label="Sessões abertas" value={u.activeSessions} />
+        <Item label="Vínculos familiares" value={u.familyLinks} />
+        <Item label="Solicitações em aberto" value={u.openRequests} />
       </dl>
       <p className="-mt-3 text-base text-muted-foreground">
-        Por privacidade, o painel mostra apenas quantidades, nunca o conteúdo dos registros de saúde.
+        A administração vê só dados da conta. Registros de saúde e conversas não aparecem aqui.
       </p>
 
       {protectedAccount ? (
-        <p className="rounded-2xl border bg-card p-4 text-base">Contas de administrador não podem ser suspensas nem excluídas por aqui.</p>
+        <p className="rounded-2xl border bg-card p-4 text-base">Contas de administrador não podem ser pausadas nem excluídas por aqui.</p>
       ) : (
         <>
           <div className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
-            <h2 className="text-xl font-bold">{u.suspendedAt ? "Reativar conta" : "Suspender conta"}</h2>
+            <h2 className="text-xl font-bold">{u.suspendedAt ? "Reativar conta" : "Pausar conta"}</h2>
             <p className="text-base text-muted-foreground">
               {u.suspendedAt
                 ? "A pessoa volta a poder entrar e os links e acessos de familiares voltam a funcionar."
-                : "A pessoa é desconectada e não consegue entrar. Links de médico e acessos de familiares também param. Nada é apagado."}
+                : "A pessoa é desconectada e não consegue entrar. Links de médico e acessos de familiares também param. Nada é apagado e dá para reativar a qualquer momento."}
             </p>
             <form action={u.suspendedAt ? unsuspendUser : suspendUser}>
               <input type="hidden" name="id" value={u.id} />
               <button className="min-h-12 w-full rounded-lg border-2 border-primary text-base font-bold">
-                {u.suspendedAt ? "Reativar conta" : "Suspender conta"}
+                {u.suspendedAt ? "Reativar conta" : "Pausar conta"}
               </button>
             </form>
           </div>
@@ -71,7 +80,7 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
           <div className="flex flex-col gap-2 rounded-2xl border border-high/40 bg-card p-4">
             <h2 className="text-xl font-bold text-high">Excluir conta</h2>
             <p className="text-base text-muted-foreground">
-              Apaga definitivamente a conta e todos os registros dela. Não dá para desfazer.
+              Apaga definitivamente a conta e todos os dados dela. Não dá para desfazer; fica registrado na auditoria.
             </p>
             <DeleteUserForm id={u.id} email={u.email} />
           </div>
