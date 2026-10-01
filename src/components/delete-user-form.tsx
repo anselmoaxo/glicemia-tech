@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteUser, type AdminState } from "@/app/(app)/admin/actions";
+import { deleteUser, type AdminState } from "@/app/admin/actions";
 import { useFormAction } from "@/lib/use-form-action";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
