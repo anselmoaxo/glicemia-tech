@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { isAdmin } from "@/lib/admin";
+import { getRole } from "@/lib/admin";
 import { requireUser } from "@/lib/session";
 import { getTrackingContext } from "@/lib/tracking/plan";
 
@@ -25,7 +25,7 @@ export default async function MaisPage() {
   const { diabetesVisible } = await getTrackingContext(user.id);
   // "Não tenho diabetes" sem acompanhamento específico: sem insulina, metas de diabetes nem alertas
   const base = diabetesVisible ? items : items.filter((i) => !["/insulina", "/alertas"].includes(i.href));
-  const list = isAdmin(user.id) ? [...base, { href: "/admin", label: "Administração" }] : base;
+  const list = (await getRole(user.id)) !== "user" ? [...base, { href: "/admin", label: "Administração" }] : base;
   return (
     <section className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">Mais</h1>

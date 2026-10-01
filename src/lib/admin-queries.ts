@@ -75,6 +75,7 @@ export async function listUsers(query: string, page: number, filter: UserFilter 
         twoFactorEnabled: users.twoFactorEnabled,
         createdAt: users.createdAt,
         suspendedAt: users.suspendedAt,
+        adminSince: users.adminSince,
         lastActive: max(sessions.updatedAt),
       })
       .from(users)
@@ -98,6 +99,7 @@ export async function getUserSummary(id: string) {
       emailVerified: users.emailVerified,
       createdAt: users.createdAt,
       suspendedAt: users.suspendedAt,
+      adminSince: users.adminSince,
       twoFactorEnabled: users.twoFactorEnabled,
     })
     .from(users)

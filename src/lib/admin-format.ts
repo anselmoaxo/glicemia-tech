@@ -21,6 +21,10 @@ export const ACTION_LABEL = {
   delete: "Excluiu",
   request_update: "Atualizou solicitação de",
   link_revoke: "Revogou vínculo familiar de",
+  role_grant: "Concedeu o papel de administrador a",
+  role_revoke: "Removeu o papel de administrador de",
+  verify_email: "Confirmou manualmente o e-mail de",
+  end_sessions: "Encerrou as sessões de",
   professional_verify: "Verificou o registro profissional de",
   professional_reject: "Recusou o registro profissional de",
 } as const;

@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteUserForm } from "@/components/delete-user-form";
-import { isAdmin, requireAdmin } from "@/lib/admin";
+import { requireAdmin, roleOf, ROLE_LABEL } from "@/lib/admin";
 import { fmtDateTime } from "@/lib/admin-format";
 import { getUserSummary } from "@/lib/admin-queries";
-import { suspendUser, unsuspendUser } from "../../actions";
+import { endSessions, grantAdmin, revokeAdmin, suspendUser, unsuspendUser, verifyEmailManually } from "../../actions";
 
 export const metadata: Metadata = { title: "Usuário" };
 
@@ -23,7 +23,9 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
   const u = await getUserSummary(id);
   if (!u) notFound();
 
-  const protectedAccount = u.id === admin.id || isAdmin(u.id);
+  const role = roleOf(u.id, u.adminSince);
+  const protectedAccount = u.id === admin.id || role !== "user";
+  const iAmOwner = admin.role === "owner";
 
   return (
     <section className="flex flex-col gap-6">
@@ -40,7 +42,7 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
           ) : (
             <span className="rounded-full border border-ok/30 bg-ok-soft px-3 py-1 text-base font-semibold text-ok">Ativo</span>
           )}
-          {isAdmin(u.id) && <span className="rounded-full border border-primary/30 bg-accent px-3 py-1 text-base font-semibold text-accent-foreground">Administrador</span>}
+          {role !== "user" && <span className="rounded-full border border-primary/30 bg-accent px-3 py-1 text-base font-semibold text-accent-foreground">{ROLE_LABEL[role]}</span>}
         </p>
       </div>
 
@@ -49,7 +51,7 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
         <Item label="Último acesso" value={fmtDateTime(u.lastActive)} />
         <Item label="E-mail confirmado" value={u.emailVerified ? "Sim" : "Não"} />
         <Item label="Duas etapas" value={u.twoFactorEnabled ? "Ativada" : "Desativada"} />
-        <Item label="Papel" value={isAdmin(u.id) ? "Administrador" : "Usuário"} />
+        <Item label="Papel" value={ROLE_LABEL[role]} />
         <Item label="Sessões abertas" value={u.activeSessions} />
         <Item label="Vínculos familiares" value={u.familyLinks} />
         <Item label="Solicitações em aberto" value={u.openRequests} />
@@ -58,10 +60,49 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
         A administração vê só dados da conta. Registros de saúde e conversas não aparecem aqui.
       </p>
 
+      {iAmOwner && u.id !== admin.id && role !== "owner" && (
+        <div className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
+          <h2 className="text-xl font-bold">Papel de administrador</h2>
+          <p className="text-base text-muted-foreground">
+            {role === "admin"
+              ? "Remover o papel encerra as sessões da pessoa e ela perde o acesso à administração."
+              : "Administradores gerenciam contas, solicitações e e-mails, mas nunca veem registros de saúde. O acesso exige verificação em duas etapas, e a conta precisa estar ativa e com o e-mail confirmado."}
+          </p>
+          <form action={role === "admin" ? revokeAdmin : grantAdmin}>
+            <input type="hidden" name="id" value={u.id} />
+            <button
+              disabled={role === "user" && (!u.emailVerified || Boolean(u.suspendedAt))}
+              className="min-h-12 w-full rounded-lg border-2 border-primary text-base font-bold disabled:opacity-50"
+            >
+              {role === "admin" ? "Remover papel de administrador" : "Tornar administrador"}
+            </button>
+          </form>
+        </div>
+      )}
+
       {protectedAccount ? (
-        <p className="rounded-2xl border bg-card p-4 text-base">Contas de administrador não podem ser pausadas nem excluídas por aqui.</p>
+        <p className="rounded-2xl border bg-card p-4 text-base">
+          Contas de administrador não podem ser pausadas, excluídas nem alteradas por aqui.
+          {iAmOwner && role === "admin" ? " Remova o papel acima para poder gerenciá-la." : ""}
+        </p>
       ) : (
         <>
+          <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
+            <h2 className="text-xl font-bold">Acesso da conta</h2>
+            <form action={endSessions} className="flex flex-col gap-1">
+              <input type="hidden" name="id" value={u.id} />
+              <p className="text-base text-muted-foreground">Desconecta a pessoa de todos os aparelhos. Ela entra de novo quando quiser.</p>
+              <button className="min-h-12 w-full rounded-lg border-2 border-primary text-base font-bold">Encerrar todas as sessões</button>
+            </form>
+            {!u.emailVerified && (
+              <form action={verifyEmailManually} className="flex flex-col gap-1 border-t pt-3">
+                <input type="hidden" name="id" value={u.id} />
+                <p className="text-base text-muted-foreground">Use só se o e-mail for confirmadamente da pessoa e o envio de confirmação não funcionou. Fica na auditoria.</p>
+                <button className="min-h-12 w-full rounded-lg border-2 border-primary text-base font-bold">Confirmar e-mail manualmente</button>
+              </form>
+            )}
+          </div>
+
           <div className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
             <h2 className="text-xl font-bold">{u.suspendedAt ? "Reativar conta" : "Pausar conta"}</h2>
             <p className="text-base text-muted-foreground">

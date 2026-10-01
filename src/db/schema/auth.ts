@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   image: text("image"),
   // Conta suspensa por um administrador: não consegue entrar nem usar links compartilhados.
   suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+  // Administrador concedido pelo proprietário (quem está em ADMIN_USER_IDS). Vazio = usuário comum.
+  adminSince: timestamp("admin_since", { withTimezone: true }),
   // Verificação em duas etapas ligada (código por e-mail e/ou aplicativo autenticador)
   twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { isAdmin, requireAdmin } from "@/lib/admin";
+import { requireAdmin, roleOf, ROLE_LABEL } from "@/lib/admin";
 import { fmtDate, fmtDateTime } from "@/lib/admin-format";
 import { listUsers, parseUserFilter, type UserFilter } from "@/lib/admin-queries";
 import { suspendUser, unsuspendUser } from "../actions";
@@ -57,7 +57,8 @@ export default async function AdminUsuariosPage({ searchParams }: PageProps<"/ad
       ) : (
         <ul className="divide-y rounded-2xl border bg-card">
           {items.map((u) => {
-            const protectedAccount = u.id === admin.id || isAdmin(u.id);
+            const role = roleOf(u.id, u.adminSince);
+            const protectedAccount = u.id === admin.id || role !== "user";
             return (
               <li key={u.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <Link href={`/admin/usuarios/${u.id}`} className="flex min-w-0 flex-col gap-1 hover:underline">
@@ -68,7 +69,7 @@ export default async function AdminUsuariosPage({ searchParams }: PageProps<"/ad
                     ) : (
                       <span className={`${badge} border-ok/30 bg-ok-soft text-ok`}>Ativo</span>
                     )}
-                    {isAdmin(u.id) && <span className={`${badge} border-primary/30 bg-accent text-accent-foreground`}>Administrador</span>}
+                    {role !== "user" && <span className={`${badge} border-primary/30 bg-accent text-accent-foreground`}>{ROLE_LABEL[role]}</span>}
                     {!u.emailVerified && <span className={`${badge} text-muted-foreground`}>E-mail não confirmado</span>}
                     {u.twoFactorEnabled && <span className={`${badge} text-muted-foreground`}>2 etapas</span>}
                   </span>

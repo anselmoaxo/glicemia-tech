@@ -112,3 +112,13 @@ Detalhes, formato dos eventos, segurança e como testar: [docs/desempenho-e-inte
 Resumo: `npm run db:migrate`; opcionalmente `RESEND_WEBHOOK_SECRET` (status de entrega dos e-mails); e o agendador chamando
 `GET /api/cron/lembretes` (com `Authorization: Bearer <CRON_SECRET>`) a cada 10–15 min para lembretes, verificações do plano e
 reenvio de webhooks.
+
+## Administração: papéis e migrações automáticas (migração 0016)
+
+- **Proprietário** = ID em `ADMIN_USER_IDS`. Só ele torna outra conta **administrador** (ou remove o papel) em Admin > Usuários > conta;
+  o papel concedido fica no banco (`users.admin_since`). Administradores gerenciam contas, solicitações, e-mails e auditoria, nunca
+  veem registros de saúde, não alteram contas de administrador e não mudam papéis. Todos precisam de verificação em duas etapas.
+- Também em Usuários > conta: **encerrar sessões** e **confirmar e-mail manualmente** (ambos vão para a auditoria).
+- **Deploy:** o script `vercel-build` aplica as migrações pendentes (`drizzle-kit migrate`) antes do `next build`. A Vercel usa esse
+  script automaticamente, então um deploy nunca sobe código que depende de uma tabela ou coluna que ainda não existe. Se a migração
+  falhar, o deploy falha e a versão anterior continua no ar. Para desligar, apague a linha `vercel-build` do `package.json`.

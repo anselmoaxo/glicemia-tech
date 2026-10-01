@@ -1,0 +1,3 @@
+ALTER TABLE "admin_audit_logs" DROP CONSTRAINT "admin_audit_logs_action_chk";--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "admin_since" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "admin_audit_logs" ADD CONSTRAINT "admin_audit_logs_action_chk" CHECK ("admin_audit_logs"."action" in ('suspend','unsuspend','delete','request_update','link_revoke','professional_verify','professional_reject','role_grant','role_revoke','verify_email','end_sessions'));
