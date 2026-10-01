@@ -1,47 +1,258 @@
-// Textos dos e-mails transacionais. Puro (sem Resend), para poder testar o conteúdo.
+// Modelos dos e-mails do app. Puro (sem Resend), para poder testar o conteúdo.
+//
+// Regras do layout (e-mail é um HTML antigo: tabelas, estilos embutidos e nada de recursos modernos de CSS):
+//  - largura máxima de 560 px, que encolhe sozinha no celular;
+//  - texto grande (17–18 px) e um único botão grande por mensagem;
+//  - o endereço do botão aparece por extenso, para quem não consegue tocar nele;
+//  - versão em texto puro junto (acessibilidade e entrega) e suporte ao modo escuro.
+export type EmailContent = { subject: string; html: string; text: string };
+
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 const INK = "#0f3d4c";
+const FONT = "'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
 
-function layout(title: string, bodyHtml: string, footer: string) {
-  return `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#eef3f1;font-family:Arial,Helvetica,sans-serif;color:#10232a">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;padding:28px">
-<tr><td>
-<p style="margin:0 0 4px;font-size:20px;font-weight:bold;color:${INK}">Glicose Tech</p>
-<h1 style="margin:16px 0 12px;font-size:22px">${esc(title)}</h1>
-${bodyHtml}
-<p style="margin:24px 0 0;font-size:14px;color:#4a5f66">${footer}</p>
-</td></tr></table></td></tr></table></body></html>`;
+/** Só aceita endereços http(s); qualquer outra coisa vira o endereço do app. */
+const safeUrl = (url: string, fallback: string) => (/^https?:\/\//i.test(url) ? url : fallback);
+
+const first = (name: string) => name.trim().split(/\s+/)[0] ?? "";
+
+type Box = { html: string; tone?: "info" | "alert" };
+
+type Shell = {
+  preheader: string;
+  title: string;
+  /** parágrafos já em HTML (use esc() no que vier de fora) */
+  intro: string[];
+  box?: Box;
+  button?: { label: string; url: string };
+  /** frases de segurança/validade, em destaque no quadro de aviso */
+  notes: string[];
+  appUrl: string;
+};
+
+function shell(p: Shell): string {
+  const paragraphs = p.intro
+    .map((t) => `<p class="txt" style="margin:0 0 16px;font-size:18px;line-height:1.6;color:#10232a">${t}</p>`)
+    .join("");
+
+  const box = p.box
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px"><tr><td class="box" style="background:${
+        p.box.tone === "alert" ? "#fbe6dc" : "#eef3f1"
+      };border-radius:14px;padding:18px 20px;text-align:center;font-family:${FONT}">${p.box.html}</td></tr></table>`
+    : "";
+
+  const button = p.button
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 12px"><tr><td align="center">
+<a class="btn" href="${esc(p.button.url)}" style="display:block;background:${INK};color:#ffffff;text-decoration:none;font-size:19px;font-weight:700;line-height:1.2;padding:18px 24px;border-radius:14px;text-align:center;font-family:${FONT}">${esc(p.button.label)}</a>
+</td></tr></table>
+<p class="muted" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#4a5f66">Se o botão não abrir, copie este endereço e cole no navegador:<br><span style="word-break:break-all"><a href="${esc(p.button.url)}" class="muted" style="color:#4a5f66">${esc(p.button.url)}</a></span></p>`
+    : "";
+
+  const notes = p.notes.length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 4px"><tr><td class="box" style="background:#eef3f1;border-left:4px solid ${INK};border-radius:8px;padding:14px 16px;font-family:${FONT}">${p.notes
+        .map((n, i) => `<p class="txt" style="margin:${i === 0 ? 0 : 8}px 0 0;font-size:15px;line-height:1.5;color:#10232a">${n}</p>`)
+        .join("")}</td></tr></table>`
+    : "";
+
+  return `<!doctype html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>${esc(p.title)}</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    .page { background:#0b1a1f !important; }
+    .card { background:#13262d !important; }
+    .txt { color:#eef3f1 !important; }
+    .muted, .muted a { color:#a9bcc2 !important; }
+    .box { background:#1b3640 !important; }
+    .btn { background:#bff0da !important; color:#0f3d4c !important; }
+  }
+  @media only screen and (max-width:480px) {
+    .pad { padding:24px 18px !important; }
+    .title { font-size:24px !important; }
+  }
+</style>
+</head>
+<body class="page" style="margin:0;padding:0;background:#eef3f1;font-family:${FONT}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px">${esc(p.preheader)}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:#eef3f1">
+<tr><td align="center" style="padding:24px 12px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
+    <tr><td style="background:${INK};border-radius:18px 18px 0 0;padding:18px 28px">
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+        <td style="padding-right:10px;vertical-align:middle"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" width="36" height="36" style="width:36px;height:36px;background:#1d5a6d;border-radius:10px;font-size:20px;line-height:36px;text-align:center">&#128167;</td></tr></table></td>
+        <td style="vertical-align:middle;font-family:${FONT};font-size:21px;font-weight:700;color:#ffffff;letter-spacing:-0.2px">Glicose Tech</td>
+      </tr></table>
+    </td></tr>
+    <tr><td class="card pad" style="background:#ffffff;border-radius:0 0 18px 18px;padding:32px 30px;font-family:${FONT}">
+      <h1 class="txt title" style="margin:0 0 18px;font-size:28px;line-height:1.2;color:#10232a;letter-spacing:-0.3px">${esc(p.title)}</h1>
+      ${paragraphs}${box}${button}${notes}
+    </td></tr>
+    <tr><td style="padding:18px 8px;text-align:center;font-family:${FONT}">
+      <p class="muted" style="margin:0;font-size:13px;line-height:1.6;color:#4a5f66">Glicose Tech · seu caderno de glicemia<br>Esta mensagem foi enviada automaticamente. Não é preciso responder.<br><a href="${esc(p.appUrl)}" class="muted" style="color:#4a5f66">${esc(p.appUrl.replace(/^https?:\/\//, ""))}</a></p>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
 }
 
-const button = (url: string, label: string) =>
-  `<p style="margin:20px 0"><a href="${esc(url)}" style="display:inline-block;background:${INK};color:#ffffff;text-decoration:none;font-size:18px;font-weight:bold;padding:14px 24px;border-radius:12px">${esc(label)}</a></p>
-<p style="margin:0;font-size:14px;color:#4a5f66">Se o botão não abrir, copie e cole este endereço no navegador:<br><span style="word-break:break-all">${esc(url)}</span></p>`;
+/** Versão em texto puro, no mesmo formato para todas as mensagens. */
+function plain(parts: string[]) {
+  return parts.filter(Boolean).join("\n\n") + "\n\n—\nGlicose Tech · seu caderno de glicemia\nMensagem automática: não é preciso responder.";
+}
 
-const first = (name: string) => esc(name.trim().split(/\s+/)[0] || "");
-
-export function verificationEmail(name: string, url: string, hours = 24) {
+// ───────────────────────────── Confirmação de e-mail ─────────────────────────────
+export function verificationEmail(p: { name: string; url: string; appUrl: string; hours?: number }): EmailContent {
+  const hours = p.hours ?? 24;
+  const url = safeUrl(p.url, p.appUrl);
   return {
     subject: "Confirme seu e-mail no Glicose Tech",
-    html: layout(
-      "Confirme seu e-mail",
-      `<p style="font-size:16px;line-height:1.5">Olá, ${first(name)}! Para ativar sua conta, confirme que este e-mail é seu.</p>${button(url, "Confirmar meu e-mail")}
-<p style="font-size:14px;color:#4a5f66">O link vale por ${hours} horas.</p>`,
-      "Se você não criou uma conta no Glicose Tech, ignore esta mensagem. Nada será feito.",
-    ),
+    html: shell({
+      preheader: "Falta só um clique para ativar sua conta.",
+      title: "Confirme seu e-mail",
+      intro: [`Olá, ${esc(first(p.name))}! Falta só um passo para ativar sua conta: confirmar que este e-mail é seu.`],
+      button: { label: "Confirmar meu e-mail", url },
+      notes: [`O link vale por <strong>${hours} horas</strong>.`, "Se você não criou uma conta no Glicose Tech, ignore esta mensagem. Nada será feito."],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      `Olá, ${first(p.name)}! Falta só um passo para ativar sua conta: confirmar que este e-mail é seu.`,
+      `Confirmar meu e-mail: ${url}`,
+      `O link vale por ${hours} horas. Se você não criou uma conta no Glicose Tech, ignore esta mensagem.`,
+    ]),
   };
 }
 
-export function resetPasswordEmail(name: string, url: string, minutes = 60) {
+// ───────────────────────────── Redefinir senha ─────────────────────────────
+export function resetPasswordEmail(p: { name: string; url: string; appUrl: string; minutes?: number }): EmailContent {
+  const minutes = p.minutes ?? 60;
+  const url = safeUrl(p.url, p.appUrl);
   return {
     subject: "Redefinir sua senha do Glicose Tech",
-    html: layout(
-      "Redefinir sua senha",
-      `<p style="font-size:16px;line-height:1.5">Olá, ${first(name)}! Recebemos um pedido para criar uma nova senha para a sua conta.</p>${button(url, "Criar nova senha")}
-<p style="font-size:14px;color:#4a5f66">O link vale por ${minutes} minutos e só pode ser usado uma vez.</p>`,
-      "Se você não pediu isso, ignore esta mensagem: sua senha continua a mesma. Por segurança, nunca compartilhe este link.",
-    ),
+    html: shell({
+      preheader: "Crie uma nova senha para a sua conta.",
+      title: "Crie uma nova senha",
+      intro: [`Olá, ${esc(first(p.name))}! Recebemos um pedido para criar uma nova senha para a sua conta.`],
+      button: { label: "Criar nova senha", url },
+      notes: [
+        `O link vale por <strong>${minutes} minutos</strong> e só pode ser usado uma vez.`,
+        "Se você não pediu isso, ignore esta mensagem: sua senha continua a mesma. Nunca compartilhe este link.",
+      ],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      `Olá, ${first(p.name)}! Recebemos um pedido para criar uma nova senha para a sua conta.`,
+      `Criar nova senha: ${url}`,
+      `O link vale por ${minutes} minutos e só pode ser usado uma vez. Se você não pediu isso, ignore esta mensagem: sua senha continua a mesma.`,
+    ]),
+  };
+}
+
+// ───────────────────────────── Convite de familiar ─────────────────────────────
+export function inviteEmail(p: { ownerName: string; url: string; appUrl: string; modules: string[]; days?: number }): EmailContent {
+  const days = p.days ?? 7;
+  const url = safeUrl(p.url, p.appUrl);
+  const list = p.modules.join(", ");
+  return {
+    subject: `${p.ownerName} convidou você para acompanhar a glicemia`,
+    html: shell({
+      preheader: `${p.ownerName} quer compartilhar o acompanhamento com você.`,
+      title: "Você recebeu um convite",
+      intro: [
+        `<strong>${esc(p.ownerName)}</strong> convidou você para acompanhar os registros de saúde no Glicose Tech, <strong>somente para leitura</strong>.`,
+        p.modules.length ? `Você poderá ver: <strong>${esc(list)}</strong>.` : "",
+      ].filter(Boolean),
+      button: { label: "Aceitar o convite", url },
+      notes: [
+        `O convite vale por <strong>${days} dias</strong>.`,
+        "Para aceitar, entre ou crie uma conta usando <strong>este mesmo e-mail</strong>.",
+        "Você não consegue alterar nada nos registros. A pessoa pode encerrar o acesso quando quiser.",
+      ],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      `${p.ownerName} convidou você para acompanhar os registros de saúde no Glicose Tech, somente para leitura.`,
+      p.modules.length ? `Você poderá ver: ${list}.` : "",
+      `Aceitar o convite: ${url}`,
+      `O convite vale por ${days} dias. Para aceitar, entre ou crie uma conta usando este mesmo e-mail.`,
+    ]),
+  };
+}
+
+// ───────────────────────────── Alerta de glicemia ─────────────────────────────
+const SAFE_MESSAGE =
+  "Este valor está fora da faixa configurada por você. Consulte seu plano de cuidados ou profissional de saúde se necessário.";
+const SAFE_MESSAGE_FAMILY =
+  "Este valor está fora da faixa configurada pela própria pessoa. Em caso de dúvida, procure o plano de cuidados ou um profissional de saúde.";
+
+export function alertEmail(p: {
+  value: number;
+  direction: "low" | "high";
+  appUrl: string;
+  /** vazio = alerta para a própria pessoa; preenchido = alerta para um familiar */
+  ownerName?: string;
+  link: string;
+}): EmailContent {
+  const above = p.direction === "high";
+  const where = above ? "acima" : "abaixo";
+  const family = Boolean(p.ownerName);
+  const url = safeUrl(p.link, p.appUrl);
+  const color = above ? "#b4431a" : "#3342b8";
+  const subject = family ? `Alerta de glicemia de ${p.ownerName}` : "Sua glicemia ficou fora da faixa";
+  const lead = family
+    ? `<strong>${esc(p.ownerName!)}</strong> registrou uma medição ${where} da faixa configurada.`
+    : `Sua última medição ficou <strong>${where} da faixa</strong> que você configurou.`;
+
+  return {
+    subject,
+    html: shell({
+      preheader: family ? `${p.ownerName} registrou ${p.value} mg/dL, ${where} da faixa.` : `Sua medição foi ${p.value} mg/dL, ${where} da faixa.`,
+      title: family ? "Alerta de glicemia" : "Glicemia fora da faixa",
+      intro: [lead],
+      box: {
+        tone: "alert",
+        html: `<p style="margin:0;font-size:46px;line-height:1.1;font-weight:700;color:${color};font-family:${FONT}">${p.value}<span style="font-size:20px;font-weight:400"> mg/dL</span></p><p style="margin:6px 0 0;font-size:17px;font-weight:600;color:${color};font-family:${FONT}">${above ? "Acima da faixa" : "Abaixo da faixa"}</p>`,
+      },
+      button: { label: family ? "Ver os registros" : "Abrir o Glicose Tech", url },
+      notes: [esc(family ? SAFE_MESSAGE_FAMILY : SAFE_MESSAGE), "Você recebe este aviso porque ativou os alertas por e-mail. Dá para desligar no Perfil."],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      family ? `${p.ownerName} registrou uma medição ${where} da faixa configurada: ${p.value} mg/dL.` : `Sua última medição ficou ${where} da faixa que você configurou: ${p.value} mg/dL.`,
+      family ? SAFE_MESSAGE_FAMILY : SAFE_MESSAGE,
+      `${family ? "Ver os registros" : "Abrir o Glicose Tech"}: ${url}`,
+      "Você recebe este aviso porque ativou os alertas por e-mail. Dá para desligar no Perfil.",
+    ]),
+  };
+}
+
+// ───────────────────────────── Código de verificação em duas etapas ─────────────────────────────
+export function twoFactorCodeEmail(p: { name: string; code: string; appUrl: string; minutes?: number }): EmailContent {
+  const minutes = p.minutes ?? 3;
+  return {
+    subject: `Seu código de acesso: ${p.code}`,
+    html: shell({
+      preheader: `Seu código é ${p.code}. Vale por ${minutes} minutos.`,
+      title: "Seu código de acesso",
+      intro: [`Olá, ${esc(first(p.name))}! Use este código para concluir a entrada no Glicose Tech:`],
+      box: {
+        html: `<p style="margin:0;font-size:44px;line-height:1.1;font-weight:700;letter-spacing:10px;color:${INK};font-family:'Courier New',monospace" class="txt">${esc(p.code)}</p>`,
+      },
+      notes: [
+        `O código vale por <strong>${minutes} minutos</strong> e só pode ser usado uma vez.`,
+        "Se não foi você quem tentou entrar, ignore esta mensagem e troque sua senha. Nunca passe este código a ninguém.",
+      ],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      `Olá, ${first(p.name)}! Seu código de acesso ao Glicose Tech é: ${p.code}`,
+      `Ele vale por ${minutes} minutos e só pode ser usado uma vez. Se não foi você quem tentou entrar, ignore esta mensagem e troque sua senha. Nunca passe este código a ninguém.`,
+    ]),
   };
 }

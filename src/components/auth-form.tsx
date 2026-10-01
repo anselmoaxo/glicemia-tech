@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Recaptcha, type RecaptchaHandle } from "@/components/recaptcha";
+import { TwoFactorChallenge } from "@/components/two-factor-challenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ export function AuthForm({ next = "/inicio", siteKey = "" }: { next?: string; si
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [methods, setMethods] = useState<string[] | null>(null); // preenchido quando falta a segunda etapa
   const captcha = useRef<RecaptchaHandle>(null);
   const signupHref = `/cadastro${next !== "/inicio" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
@@ -38,8 +40,17 @@ export function AuthForm({ next = "/inicio", siteKey = "" }: { next?: string; si
       captcha.current?.reset(); // o token do captcha vale uma vez só
       return setError(loginErrorMessage(res.error));
     }
+    const data = res.data as { twoFactorRedirect?: boolean; twoFactorMethods?: string[] } | null;
+    if (data?.twoFactorRedirect) {
+      setMethods(data.twoFactorMethods?.length ? data.twoFactorMethods : ["totp"]);
+      return; // senha certa, mas falta o código da segunda etapa
+    }
     router.replace(next);
     router.refresh();
+  }
+
+  if (methods) {
+    return <TwoFactorChallenge methods={methods} next={next} onBack={() => setMethods(null)} />;
   }
 
   return (

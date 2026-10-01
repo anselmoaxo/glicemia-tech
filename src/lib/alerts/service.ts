@@ -2,8 +2,10 @@ import "server-only";
 import { desc, eq, gte, and } from "drizzle-orm";
 import { db } from "@/db";
 import { alerts, glucoseReadings, notifications } from "@/db/schema";
-import { escapeHtml, sendEmail } from "@/lib/email";
-import { classify, OUT_OF_RANGE_MESSAGE } from "@/lib/glucose/classify";
+import { sendEmail } from "@/lib/email";
+import { alertEmail } from "@/lib/email-templates";
+import { env } from "@/lib/env";
+import { classify } from "@/lib/glucose/classify";
 import { getTargets } from "@/lib/glucose/queries";
 import { getProfile } from "@/lib/profile";
 import { listGlucoseFamilyEmails } from "@/lib/sharing/queries";
@@ -38,7 +40,6 @@ export async function syncReadingAlert(owner: Owner, readingId: string, isNew: b
   if (!isNew) return;
 
   const profile = await getProfile(owner.id);
-  const where = status === "low" ? "abaixo" : "acima";
   const log = (recipientType: "self" | "family", ok: boolean) =>
     db.insert(notifications).values({
       userId: owner.id,
@@ -47,25 +48,24 @@ export async function syncReadingAlert(owner: Owner, readingId: string, isNew: b
       status: ok ? "sent" : "failed",
     });
 
+  const appUrl = env.BETTER_AUTH_URL;
+  const direction = status; // "low" | "high"
+
   if (profile.alertEmailSelf) {
-    const ok = await sendEmail(
-      owner.email,
-      "Glicemia fora da faixa configurada",
-      `<p>Sua medição de <strong>${reading.value} mg/dL</strong> ficou ${where} da faixa que você configurou.</p>
-       <p>${escapeHtml(OUT_OF_RANGE_MESSAGE)}</p>`,
-    );
-    await log("self", ok);
+    const mail = alertEmail({ value: reading.value, direction, appUrl, link: `${appUrl}/glicemia` });
+    await log("self", await sendEmail(owner.email, mail.subject, mail.html, mail.text));
   }
 
   if (profile.alertEmailFamily) {
+    const mail = alertEmail({
+      value: reading.value,
+      direction,
+      appUrl,
+      ownerName: owner.name,
+      link: `${appUrl}/familia/${owner.id}`,
+    });
     for (const to of await listGlucoseFamilyEmails(owner.id)) {
-      const ok = await sendEmail(
-        to,
-        `Alerta de glicemia de ${owner.name}`,
-        `<p>${escapeHtml(owner.name)} registrou <strong>${reading.value} mg/dL</strong>, ${where} da faixa configurada.</p>
-         <p>${escapeHtml(OUT_OF_RANGE_MESSAGE)}</p>`,
-      );
-      await log("family", ok);
+      await log("family", await sendEmail(to, mail.subject, mail.html, mail.text));
     }
   }
 }

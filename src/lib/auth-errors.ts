@@ -25,3 +25,21 @@ export function signupErrorMessage(e: AuthError) {
   return (e && common(e)) ?? "Não foi possível criar a conta. Se você já tem cadastro, entre com seu e-mail.";
 }
 
+
+const TWO_FACTOR_MESSAGES: Record<string, string> = {
+  INVALID_CODE: "Código incorreto. Confira e tente de novo.",
+  INVALID_BACKUP_CODE: "Código de recuperação inválido ou já usado.",
+  OTP_HAS_EXPIRED: "Esse código venceu. Peça um novo código.",
+  TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE: "Muitas tentativas com esse código. Peça um novo código.",
+  ACCOUNT_TEMPORARILY_LOCKED: "Muitos códigos errados. Por segurança, a conta ficou bloqueada por 15 minutos. Tente mais tarde.",
+  INVALID_TWO_FACTOR_COOKIE: "A verificação venceu. Vamos voltar ao início da entrada.",
+  OTP_NOT_CONFIGURED: "O código por e-mail não está disponível agora. Use o aplicativo autenticador.",
+  INVALID_PASSWORD: "Senha incorreta.",
+};
+
+/** Mensagens da segunda etapa e da configuração do 2FA (códigos do plugin traduzidos). */
+export function twoFactorErrorMessage(e: AuthError) {
+  if (e?.code && TWO_FACTOR_MESSAGES[e.code]) return TWO_FACTOR_MESSAGES[e.code];
+  if (e?.status === 429) return "Muitas tentativas em pouco tempo. Aguarde um minuto e tente de novo.";
+  return "Não foi possível concluir. Tente novamente.";
+}

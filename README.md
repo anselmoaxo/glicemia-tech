@@ -65,6 +65,18 @@ Para testar sem domínio, use `EMAIL_FROM=Glicose Tech <onboarding@resend.dev>`:
 - **Limite por IP:** 10 tentativas de login por minuto e 10 cadastros por hora, guardado no banco (`rate_limits`).
 - **CAPTCHA (Google reCAPTCHA v2):** crie as chaves em <https://www.google.com/recaptcha/admin> (tipo *v2 Caixa de seleção*, domínios `localhost` e o do app) e defina `RECAPTCHA_SITE_KEY` (a antiga `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` também funciona) e `RECAPTCHA_SECRET_KEY`. Sem as duas, o captcha fica desligado.
 
+## Verificação em duas etapas (2FA)
+
+Opcional, ativada pela própria pessoa em **Perfil → Verificação em duas etapas** (pede a senha para ativar, gerar novos códigos ou desativar).
+
+- **Código por e-mail** (mais simples): a cada entrada enviamos um código de 6 números ao e-mail da conta, válido por 3 minutos. Só aparece se o envio de e-mail (Resend) estiver configurado.
+- **Aplicativo autenticador** (mais seguro): Google Authenticator, Microsoft Authenticator ou Authy, com código QR (ou chave digitada). A ativação só vale depois de confirmar o primeiro código.
+- **Códigos de recuperação:** 10 códigos de uso único, mostrados uma vez ao ativar o aplicativo. Servem se a pessoa perder o celular.
+- **"Não pedir neste aparelho por 30 dias"** na tela do código.
+- **Proteções:** 5 códigos errados bloqueiam a verificação por 15 minutos; no máximo 5 códigos por e-mail a cada 15 minutos por IP; os códigos de e-mail ficam guardados só como hash.
+
+Atenção: o segredo do aplicativo autenticador e os códigos de recuperação ficam **criptografados com `BETTER_AUTH_SECRET`**. Trocar esse valor invalida os 2FA por aplicativo já configurados (a pessoa precisaria desativar e configurar de novo). Se alguém perder o acesso, o administrador pode remover a verificação direto no banco: `update users set two_factor_enabled = false where email = '...'; delete from two_factors where user_id = '...';`
+
 ## Segurança e privacidade
 
 - Toda consulta filtra pelo `userId` da sessão; acesso de familiar passa por `getAccessibleModules`.

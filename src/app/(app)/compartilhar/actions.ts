@@ -5,11 +5,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { familyMembers, sharingPermissions } from "@/db/schema";
-import { escapeHtml, sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
+import { inviteEmail } from "@/lib/email-templates";
 import { env } from "@/lib/env";
 import { uuidSchema } from "@/lib/glucose/validation";
 import { requireUser } from "@/lib/session";
-import { SHARE_MODULE_KEYS } from "@/lib/sharing/modules";
+import { moduleLabel, SHARE_MODULE_KEYS } from "@/lib/sharing/modules";
 import { addDays, generateToken } from "@/lib/sharing/tokens";
 
 export type InviteState = { ok?: boolean; error?: string; link?: string; emailSent?: boolean };
@@ -57,13 +58,14 @@ export async function inviteFamily(_: InviteState, formData: FormData): Promise<
   ]);
 
   const link = `${env.BETTER_AUTH_URL}/convite/${token}`;
-  const emailSent = await sendEmail(
-    email,
-    `${user.name} quer compartilhar o acompanhamento de glicemia com você`,
-    `<p>${escapeHtml(user.name)} convidou você para acompanhar seus registros no Glicose Tech (somente leitura).</p>
-     <p><a href="${link}">Aceitar convite</a></p>
-     <p>O convite vale por ${INVITE_DAYS} dias. Você precisará entrar com este e-mail.</p>`,
-  );
+  const mail = inviteEmail({
+    ownerName: user.name,
+    url: link,
+    appUrl: env.BETTER_AUTH_URL,
+    modules: modules.map(moduleLabel),
+    days: INVITE_DAYS,
+  });
+  const emailSent = await sendEmail(email, mail.subject, mail.html, mail.text);
 
   revalidatePath("/compartilhar");
   return { ok: true, emailSent, link: emailSent ? undefined : link };

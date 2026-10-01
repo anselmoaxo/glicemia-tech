@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Tabelas exigidas pelo Better Auth. `users` é a tabela de usuários do domínio.
 export const users = pgTable("users", {
@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   image: text("image"),
   // Conta suspensa por um administrador: não consegue entrar nem usar links compartilhados.
   suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+  // Verificação em duas etapas ligada (código por e-mail e/ou aplicativo autenticador)
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -60,3 +62,22 @@ export const verifications = pgTable("verifications", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+// Aplicativo autenticador (TOTP) e códigos de recuperação. O segredo e os códigos ficam criptografados
+// com BETTER_AUTH_SECRET: trocar esse segredo invalida os 2FA por aplicativo já configurados.
+export const twoFactors = pgTable(
+  "two_factors",
+  {
+    id: text("id").primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // false enquanto a pessoa ainda não confirmou o primeiro código do aplicativo
+    verified: boolean("verified").notNull().default(true),
+    failedVerificationCount: integer("failed_verification_count").notNull().default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
+  },
+  (t) => [uniqueIndex("two_factors_user_uq").on(t.userId)],
+);

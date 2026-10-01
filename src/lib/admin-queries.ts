@@ -113,6 +113,7 @@ export async function getUserSummary(id: string) {
       email: users.email,
       createdAt: users.createdAt,
       suspendedAt: users.suspendedAt,
+      twoFactorEnabled: users.twoFactorEnabled,
     })
     .from(users)
     .where(eq(users.id, id));

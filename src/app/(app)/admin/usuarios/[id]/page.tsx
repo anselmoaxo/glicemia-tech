@@ -38,6 +38,7 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 text-base">
         <div><dt className="text-muted-foreground">Cadastro</dt><dd className="font-semibold">{fmtDateTime(u.createdAt)}</dd></div>
         <div><dt className="text-muted-foreground">Último acesso</dt><dd className="font-semibold">{fmtDateTime(u.lastActive)}</dd></div>
+        <div><dt className="text-muted-foreground">Duas etapas</dt><dd className="font-semibold">{u.twoFactorEnabled ? "Ativada" : "Desativada"}</dd></div>
         <div><dt className="text-muted-foreground">Medições</dt><dd className="font-semibold">{c.readings}</dd></div>
         <div><dt className="text-muted-foreground">Refeições</dt><dd className="font-semibold">{c.meals}</dd></div>
         <div><dt className="text-muted-foreground">Medicamentos</dt><dd className="font-semibold">{c.medications}</dd></div>

@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { ChangePasswordForm } from "@/components/change-password-form";
+import { TwoFactorSettings } from "@/components/two-factor-settings";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { ProfileForm } from "@/components/profile-form";
 import { formatPhoneDisplay } from "@/lib/phone";
 import { diagnosisYearToYears } from "@/lib/profile-utils";
 import { getProfile } from "@/lib/profile";
+import { db } from "@/db";
+import { twoFactors } from "@/db/schema";
+import { emailEnabled } from "@/lib/email-flags";
 import { requireUser } from "@/lib/session";
+import { and, eq } from "drizzle-orm";
 import { deleteAccount } from "./actions";
 
 export const metadata: Metadata = { title: "Perfil" };
@@ -13,6 +18,11 @@ export const metadata: Metadata = { title: "Perfil" };
 export default async function PerfilPage() {
   const user = await requireUser();
   const profile = await getProfile(user.id);
+  // aplicativo autenticador já configurado e confirmado?
+  const [totp] = await db
+    .select({ id: twoFactors.id })
+    .from(twoFactors)
+    .where(and(eq(twoFactors.userId, user.id), eq(twoFactors.verified, true)));
   return (
     <section className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">Meu perfil</h1>
@@ -30,6 +40,8 @@ export default async function PerfilPage() {
       />
 
       <ChangePasswordForm />
+
+      <TwoFactorSettings enabled={Boolean(user.twoFactorEnabled)} hasTotp={Boolean(totp)} emailAvailable={emailEnabled()} />
 
       <form action={deleteAccount} className="flex flex-col gap-2 border-t pt-6">
         <h2 className="text-xl font-semibold">Excluir conta</h2>

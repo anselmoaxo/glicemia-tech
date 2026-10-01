@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware, isAPIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { captcha } from "better-auth/plugins";
+import { captcha, twoFactor } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { after } from "next/server";
 import { db } from "@/db";
@@ -10,7 +10,7 @@ import * as schema from "@/db/schema";
 import { captchaEnabled } from "@/lib/captcha";
 import { sendEmail } from "@/lib/email";
 import { emailEnabled, emailVerificationRequired } from "@/lib/email-flags";
-import { resetPasswordEmail, verificationEmail } from "@/lib/email-templates";
+import { resetPasswordEmail, twoFactorCodeEmail, verificationEmail, type EmailContent } from "@/lib/email-templates";
 import { env } from "@/lib/env";
 import { lockMessage, lockStatus } from "@/lib/login-lock";
 import { attemptKey, clearAttempts, getAttemptState, recordFailure } from "@/lib/login-lock-store";
@@ -32,11 +32,11 @@ const bodyOf = (context: unknown): Record<string, unknown> => {
 const text = (v: unknown) => (typeof v === "string" ? v : "");
 
 /** Envia sem atrasar a resposta (e sem revelar, pelo tempo, se a conta existe). */
-function sendInBackground(to: string, subject: string, html: string) {
+function sendInBackground(to: string, m: EmailContent) {
   try {
-    after(() => sendEmail(to, subject, html));
+    after(() => sendEmail(to, m.subject, m.html, m.text));
   } catch {
-    void sendEmail(to, subject, html); // fora de uma requisição do Next (ex.: script)
+    void sendEmail(to, m.subject, m.html, m.text); // fora de uma requisição do Next (ex.: script)
   }
 }
 
@@ -51,6 +51,7 @@ export const auth = betterAuth({
       account: schema.accounts,
       verification: schema.verifications,
       rateLimit: schema.rateLimits,
+      twoFactor: schema.twoFactors,
     },
   }),
 
@@ -61,8 +62,7 @@ export const auth = betterAuth({
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true, // trocar a senha desconecta os outros aparelhos
     sendResetPassword: async ({ user, url }) => {
-      const m = resetPasswordEmail(user.name, url);
-      sendInBackground(user.email, m.subject, m.html);
+      sendInBackground(user.email, resetPasswordEmail({ name: user.name, url, appUrl: env.BETTER_AUTH_URL }));
     },
   },
   emailVerification: {
@@ -71,8 +71,7 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60 * 24,
     sendVerificationEmail: async ({ user, url }) => {
-      const m = verificationEmail(user.name, url);
-      sendInBackground(user.email, m.subject, m.html);
+      sendInBackground(user.email, verificationEmail({ name: user.name, url, appUrl: env.BETTER_AUTH_URL }));
     },
   },
 
@@ -95,6 +94,8 @@ export const auth = betterAuth({
       "/request-password-reset": { window: 3600, max: 5 },
       "/send-verification-email": { window: 3600, max: 5 },
       "/reset-password": { window: 3600, max: 10 },
+      // cada pedido de código dispara um e-mail: limite para não virar spam
+      "/two-factor/send-otp": { window: 900, max: 5 },
     },
   },
   // Na Vercel o IP real do visitante vem nestes cabeçalhos.
@@ -124,7 +125,8 @@ export const auth = betterAuth({
       if (isAPIError(returned)) {
         const code = (returned.body as { code?: string } | undefined)?.code;
         if (code === "INVALID_EMAIL_OR_PASSWORD") await recordFailure(key);
-      } else if (ctx.context.newSession) {
+      } else {
+        // senha correta (com sessão aberta ou com a segunda etapa ainda pendente): zera a contagem
         await clearAttempts(key);
       }
     }),
@@ -194,6 +196,25 @@ export const auth = betterAuth({
 
   plugins: [
     nextCookies(),
+    // Verificação em duas etapas opcional: aplicativo autenticador (TOTP), códigos de recuperação e,
+    // se o e-mail estiver configurado, código por e-mail. Erros seguidos bloqueiam a conta por 15 minutos.
+    twoFactor({
+      issuer: "Glicose Tech",
+      backupCodeOptions: { amount: 10, length: 10 },
+      accountLockout: { enabled: true, maxFailedAttempts: 5, durationSeconds: 15 * 60 },
+      trustDeviceMaxAge: 60 * 60 * 24 * 30,
+      ...(emailEnabled()
+        ? {
+            otpOptions: {
+              period: 3, // minutos
+              storeOTP: "hashed" as const,
+              sendOTP: async ({ user, otp }: { user: { name: string; email: string }; otp: string }) => {
+                sendInBackground(user.email, twoFactorCodeEmail({ name: user.name, code: otp, appUrl: env.BETTER_AUTH_URL, minutes: 3 }));
+              },
+            },
+          }
+        : {}),
+    }),
     // Google reCAPTCHA v2 no cadastro, no login e no pedido de nova senha (evita e-mails em massa).
     ...(captchaEnabled()
       ? [
