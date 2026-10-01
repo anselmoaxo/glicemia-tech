@@ -48,7 +48,7 @@ export function AssistantWidget() {
           <span className="relative max-w-[9rem] rounded-2xl rounded-br-sm border bg-card px-3 py-2 text-sm font-semibold shadow-md">
             Posso ajudar?
           </span>
-          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background">
+          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-600 to-brand-500 text-primary-foreground shadow-lg shadow-brand-600/30 ring-4 ring-background">
             <Bot aria-hidden className="size-7" />
           </span>
         </button>

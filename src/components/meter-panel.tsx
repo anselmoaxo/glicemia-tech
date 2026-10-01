@@ -14,15 +14,15 @@ type Props = {
 const numeral: Record<GlucoseStatus, string> = {
   in_range: "text-lcd-ink",
   no_target: "text-lcd-ink",
-  high: "text-[#ffc9a8]",
-  low: "text-[#c7cfff]",
+  high: "text-[#fde68a]",
+  low: "text-[#bae6fd]",
 };
 
 const dot: Record<GlucoseStatus, string> = {
   in_range: "bg-[#5fd3a0]",
   no_target: "bg-white/50",
-  high: "bg-[#ff9d6c]",
-  low: "bg-[#9aa8ff]",
+  high: "bg-[#fbbf24]",
+  low: "bg-[#38bdf8]",
 };
 
 /** O "visor": última medição em destaque + régua mostrando onde ela cai na faixa do usuário. */

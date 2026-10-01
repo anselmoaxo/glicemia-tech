@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Atkinson_Hyperlegible_Mono, Atkinson_Hyperlegible_Next } from "next/font/google";
+import { Atkinson_Hyperlegible_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { RegisterServiceWorker } from "@/components/register-sw";
 import "./globals.css";
 
-// Atkinson Hyperlegible foi desenhada para baixa visão: letras e números inconfundíveis.
-const ui = Atkinson_Hyperlegible_Next({ variable: "--font-ui", subsets: ["latin"], display: "swap" });
+// Padrão AnselmoTech: Plus Jakarta Sans nos títulos e Inter no texto. Os números da glicemia mantêm a Atkinson Mono,
+// desenhada para baixa visão (dígitos inconfundíveis).
+const display = Plus_Jakarta_Sans({ variable: "--font-display-face", subsets: ["latin"], weight: ["500", "600", "700", "800"], display: "swap" });
+const ui = Inter({ variable: "--font-ui", subsets: ["latin"], display: "swap" });
 const lcd = Atkinson_Hyperlegible_Mono({ variable: "--font-lcd-face", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
@@ -17,12 +19,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#4338ca",
+  themeColor: "#4f46e5",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${ui.variable} ${lcd.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${display.variable} ${ui.variable} ${lcd.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col text-base">
         {children}
         <RegisterServiceWorker />

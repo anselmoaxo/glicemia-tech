@@ -5,20 +5,24 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-ok: #0e7a56;
-  --color-ok-soft: #dff3ea;
-  --color-high: #b4431a;
-  --color-high-soft: #fbe6dc;
-  --color-low: #2f4fb0;
-  --color-low-soft: #e1e8fa;
-  --color-lcd: #141a4a;
+  /* Semânticas (padrão AnselmoTech): sucesso = esmeralda, atenção = âmbar, informação = céu. Sempre com texto junto. */
+  --color-ok: #047857;
+  --color-ok-soft: #d1fae5;
+  --color-high: #b45309;
+  --color-high-soft: #fef3c7;
+  --color-low: #0369a1;
+  --color-low-soft: #e0f2fe;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-lcd: #1e1b4b;
   --color-lcd-ink: #bff0da;
   --font-lcd: var(--font-lcd-face), ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-ui), system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-ui), system-ui, sans-serif;
   --font-mono: var(--font-lcd);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -58,30 +62,30 @@
 }
 
 :root {
-  /* Marca: índigo (principal), azul-marinho (texto) e fundos claros. Edite só aqui. */
-  --background: #f5f6fc;
-  --foreground: #0f1b3d;
+  /* Padrão AnselmoTech (igual ao AgendaTech): índigo 600 principal, slate 900 no texto, slate 50 no fundo. Edite só aqui. */
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #0f1b3d;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #0f1b3d;
-  --primary: #4338ca;
+  --popover-foreground: #0f172a;
+  --primary: #4f46e5;
   --primary-foreground: #ffffff;
-  --secondary: #e8eafb;
-  --secondary-foreground: #0f1b3d;
-  --muted: #e8eafb;
-  --muted-foreground: #4b5578;
-  --accent: #dfe3fa;
-  --accent-foreground: #0f1b3d;
-  --destructive: #b4431a;
-  --border: #d5d9ee;
-  --input: #8089b8;
-  --ring: #5b4bdb;
-  --chart-1: #4338ca;
-  --chart-2: #0e7a56;
-  --chart-3: #2f4fb0;
-  --chart-4: #b4431a;
-  --chart-5: #0f1b3d;
+  --secondary: #eef2ff;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #e0e7ff;
+  --accent-foreground: #312e81;
+  --destructive: #b91c1c;
+  --border: #e2e8f0;
+  --input: #7c8aa5;
+  --ring: #6366f1;
+  --chart-1: #4f46e5;
+  --chart-2: #047857;
+  --chart-3: #0369a1;
+  --chart-4: #b45309;
+  --chart-5: #0f172a;
   --radius: 1rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -133,6 +137,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
   }
   html {
     @apply font-sans;

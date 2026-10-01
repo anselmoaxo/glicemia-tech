@@ -1,6 +1,6 @@
-// Ícone da marca (gota branca sobre azul-petróleo), usado no navegador, no PWA e no iOS.
+// Ícone da marca (gota branca sobre índigo), usado no navegador, no PWA e no iOS.
 // A gota é a mesma do logo do app (lucide "droplet").
-const INK = "#4338ca";
+const INK = "#4f46e5";
 
 export function BrandIcon({ size, rounded = false }: { size: number; rounded?: boolean }) {
   // Ícones "maskable"/iOS são cortados pelo sistema: a gota fica no centro, com margem segura.
