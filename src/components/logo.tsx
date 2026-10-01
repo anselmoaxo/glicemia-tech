@@ -10,7 +10,7 @@ export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
       >
         <Droplet className={big ? "size-7" : "size-5"} fill="currentColor" />
       </span>
-      <span className={`font-bold tracking-tight ${big ? "text-3xl" : "text-xl"}`}>Glicose Tech</span>
+      <span className={`whitespace-nowrap font-bold tracking-tight ${big ? "text-3xl" : "text-xl"}`}>Glicose Tech</span>
     </span>
   );
 }

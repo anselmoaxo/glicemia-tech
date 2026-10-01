@@ -1,6 +1,7 @@
 import {
   ALargeSmall,
   Bell,
+  Bot,
   Eye,
   Hand,
   FileText,
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 const btnPrimary =
-  "inline-flex min-h-14 items-center justify-center rounded-2xl bg-primary px-7 text-lg font-bold text-primary-foreground transition-colors hover:bg-primary/90";
+  "inline-flex min-h-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-brand-500 px-7 text-lg font-bold text-primary-foreground shadow-md shadow-brand-600/30 transition-opacity hover:opacity-90";
 const btnSecondary =
   "inline-flex min-h-14 items-center justify-center rounded-2xl border-2 border-primary px-7 text-lg font-bold transition-colors hover:bg-accent";
 
@@ -61,13 +62,23 @@ const features: { icon: LucideIcon; title: string; text: string }[] = [
   },
   {
     icon: Bell,
-    title: "Avisos por e-mail",
-    text: "Se quiser, receba um aviso quando um valor sair da sua faixa e avise um familiar.",
+    title: "Avisos e lembretes",
+    text: "Defina lembretes para medir e, se quiser, um aviso por e-mail quando um valor sair da faixa que você configurou.",
+  },
+  {
+    icon: Bot,
+    title: "Assistente de dúvidas",
+    text: "Tire dúvidas sobre diabetes, glicose e contagem de carboidratos. É educativo: não diagnostica nem calcula insulina.",
+  },
+  {
+    icon: Users,
+    title: "Família e médico",
+    text: "Convide familiares (inclusive responsáveis por menores) e leve o relatório ou um link temporário ao seu médico.",
   },
 ];
 
 const readable: { icon: LucideIcon; text: string }[] = [
-  { icon: Eye, text: "Letras e números desenhados para baixa visão" },
+  { icon: Eye, text: "Números da glicemia em fonte desenhada para baixa visão" },
   { icon: Hand, text: "Botões grandes, fáceis de tocar" },
   { icon: ALargeSmall, text: "Texto ajustável: normal, grande ou muito grande" },
   { icon: Smartphone, text: "Funciona no celular e pode ser instalado na tela inicial" },
@@ -75,9 +86,12 @@ const readable: { icon: LucideIcon; text: string }[] = [
 
 const privacy = [
   "Cada pessoa só vê os próprios dados.",
-  "Familiares recebem acesso somente para leitura, e você escolhe o que eles veem.",
+  "Familiares recebem acesso somente para leitura, você escolhe o que eles veem e consulta quem acessou.",
   "Links para o médico têm validade e você pode revogar quando quiser.",
-  "Você exclui a conta e todos os seus dados a qualquer momento.",
+  "Menores de 18 anos só usam o app com a confirmação de um responsável legal.",
+  "Você exporta uma cópia dos seus dados e exclui a conta a qualquer momento.",
+  "O assistente não lê suas medições e a conversa com ele não é guardada.",
+  "A equipe do app vê apenas contagens, nunca suas medições.",
 ];
 
 export default async function Home() {
@@ -97,13 +111,13 @@ export default async function Home() {
           <Link href="/" className="flex min-h-16 items-center" aria-label="Glicose Tech, página inicial">
             <Logo />
           </Link>
-          <nav aria-label="Acesso" className="flex items-center gap-1">
-            <Link href="/login" className="flex min-h-12 items-center rounded-full px-4 text-base font-semibold hover:bg-secondary">
+          <nav aria-label="Acesso" className="flex items-center">
+            <Link href="/login" className="flex min-h-12 items-center whitespace-nowrap rounded-full px-3 text-base font-semibold hover:bg-secondary sm:px-4">
               Entrar
             </Link>
             <Link
               href="/cadastro"
-              className="flex min-h-12 items-center rounded-full bg-primary px-5 text-base font-bold text-primary-foreground hover:bg-primary/90"
+              className="flex min-h-12 items-center whitespace-nowrap rounded-full bg-primary px-3 text-base font-bold text-primary-foreground hover:bg-primary/90 sm:px-5"
             >
               Criar conta
             </Link>
@@ -113,7 +127,8 @@ export default async function Home() {
 
       <main id="principal" className="flex-1">
         {/* Herói: a promessa e o visor */}
-        <section className="mx-auto grid max-w-5xl items-center gap-10 px-4 py-10 lg:grid-cols-2 lg:py-16">
+        <section className="bg-gradient-to-b from-secondary to-background">
+          <div className="mx-auto grid max-w-5xl items-center gap-10 px-4 py-10 lg:grid-cols-2 lg:py-16">
           <div className="flex flex-col gap-6">
             <h1 className="text-5xl leading-[1.05] font-bold tracking-tight sm:text-6xl">
               Registre sua glicemia em poucos segundos.
@@ -144,6 +159,7 @@ export default async function Home() {
             <p className="px-2 text-base text-muted-foreground">
               Assim o app mostra sua última medição e onde ela fica dentro da faixa que você configurou.
             </p>
+          </div>
           </div>
         </section>
 
@@ -257,6 +273,7 @@ export default async function Home() {
           <nav aria-label="Rodapé" className="flex gap-4">
             <Link href="/login" className="flex min-h-12 items-center underline underline-offset-4">Entrar</Link>
             <Link href="/cadastro" className="flex min-h-12 items-center underline underline-offset-4">Criar conta</Link>
+            <Link href="/politica-de-privacidade" className="flex min-h-12 items-center underline underline-offset-4">Privacidade</Link>
           </nav>
         </div>
       </footer>
