@@ -8,6 +8,8 @@ export const metadata: Metadata = { title: "Mais" };
 const items = [
   { href: "/insulina", label: "Insulina" },
   { href: "/metas", label: "Metas de glicemia" },
+  { href: "/alertas", label: "Alertas e lembretes" },
+  { href: "/orientacoes", label: "Orientações para medir e ir à consulta" },
   { href: "/relatorios", label: "Relatórios e link para o médico" },
   { href: "/compartilhar", label: "Compartilhar com familiar" },
   { href: "/familia", label: "Acompanhando familiares" },

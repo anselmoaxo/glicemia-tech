@@ -256,3 +256,26 @@ export function twoFactorCodeEmail(p: { name: string; code: string; appUrl: stri
     ]),
   };
 }
+
+// ───────────────────────────── Lembrete para medir ─────────────────────────────
+// Sem nenhum dado de saúde: só o convite para registrar.
+export function reminderEmail(p: { appUrl: string }): EmailContent {
+  const url = `${p.appUrl}/glicemia/nova`;
+  const manage = `${p.appUrl}/alertas`;
+  return {
+    subject: "Lembrete: hora de registrar sua glicemia",
+    html: shell({
+      preheader: "Um lembrete que você agendou no Glicose Tech.",
+      title: "Hora de registrar sua glicemia",
+      intro: ["Este é o lembrete que você programou. Quando medir, anote o valor, o horário e o contexto da medição."],
+      button: { label: "Registrar agora", url },
+      notes: [`Para mudar o horário, pausar ou excluir este lembrete, abra <a href="${esc(manage)}" style="color:${INK}">Alertas e lembretes</a>.`],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      "Hora de registrar sua glicemia. Este é o lembrete que você programou.",
+      `Registrar agora: ${url}`,
+      `Para mudar, pausar ou excluir lembretes: ${manage}`,
+    ]),
+  };
+}

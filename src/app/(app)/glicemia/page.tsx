@@ -64,7 +64,7 @@ export default async function GlicemiaPage({ searchParams }: PageProps<"/glicemi
 
       <p className="text-sm text-muted-foreground">
         As faixas usadas são as que você definiu em <Link href="/metas" className="underline">Metas</Link>.
-        O app organiza seus registros e não substitui o acompanhamento médico.
+        O app organiza seus registros e não substitui o acompanhamento médico. Dúvidas sobre como registrar? Veja as <Link href="/orientacoes" className="underline">Orientações</Link>.
       </p>
     </section>
   );

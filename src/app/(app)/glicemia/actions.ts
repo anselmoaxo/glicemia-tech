@@ -6,7 +6,9 @@ import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { glucoseReadings } from "@/db/schema";
+import { isOutsideRange } from "@/lib/alerts/range";
 import { syncReadingAlert } from "@/lib/alerts/service";
+import { getRangeSettings } from "@/lib/alerts/settings";
 import { localToDate } from "@/lib/datetime";
 import { CUSTOM_CONTEXT_KEY } from "@/lib/glucose/contexts";
 import { findOrCreateCustomContext } from "@/lib/glucose/queries";
@@ -14,7 +16,15 @@ import { readingSchema, uuidSchema } from "@/lib/glucose/validation";
 import { getProfile } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 
-export type ReadingState = { error?: string };
+/** `outOfRange`: medição salva, mas fora da faixa pessoal; a tela mostra o aviso em vez de redirecionar. */
+export type ReadingState = { error?: string; outOfRange?: boolean };
+
+// O aviso só existe com a faixa pessoal ativa e completa; sem ela nada é avaliado.
+async function afterSave(userId: string, value: number): Promise<ReadingState | null> {
+  revalidatePath("/glicemia");
+  if (isOutsideRange(value, await getRangeSettings(userId))) return { outOfRange: true };
+  return null;
+}
 
 async function parseReading(userId: string, formData: FormData) {
   const parsed = readingSchema.safeParse(Object.fromEntries(formData));
@@ -46,7 +56,8 @@ export async function createReading(_: ReadingState, formData: FormData): Promis
     .values({ ...r.data, userId: user.id })
     .returning({ id: glucoseReadings.id });
   after(() => syncReadingAlert(user, created.id, true));
-  revalidatePath("/glicemia");
+  const notice = await afterSave(user.id, r.data.valueMgDl);
+  if (notice) return notice;
   redirect("/glicemia");
 }
 
@@ -67,8 +78,8 @@ export async function updateReading(
     .returning({ id: glucoseReadings.id });
   if (updated.length === 0) return { error: "Registro não encontrado" };
   after(() => syncReadingAlert(user, id, false));
-
-  revalidatePath("/glicemia");
+  const notice = await afterSave(user.id, r.data.valueMgDl);
+  if (notice) return notice;
   redirect("/glicemia");
 }
 

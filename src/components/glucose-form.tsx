@@ -1,5 +1,6 @@
 "use client";
 
+import { Info } from "lucide-react";
 import Link from "next/link";
 import { useFormAction } from "@/lib/use-form-action";
 import { useState } from "react";
@@ -7,6 +8,7 @@ import type { ReadingState } from "@/app/(app)/glicemia/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RANGE_NOTICE } from "@/lib/alerts/range";
 import { CONTEXTS, CUSTOM_CONTEXT_KEY } from "@/lib/glucose/contexts";
 
 export type ReadingDefaults = {
@@ -36,6 +38,25 @@ export function GlucoseForm({ action, defaults: d, submitLabel }: Props) {
   const [state, formAction, pending] = useFormAction<ReadingState>(action, {});
   const [context, setContext] = useState(d.contextKey);
   const options = [...CONTEXTS, { key: CUSTOM_CONTEXT_KEY, label: "Outro..." }];
+
+  if (state.outOfRange) {
+    return (
+      <div className="flex flex-col gap-5">
+        <p role="status" className="flex gap-3 rounded-2xl border-2 border-primary bg-secondary p-4 text-lg">
+          <Info aria-hidden className="mt-1 size-6 shrink-0 text-primary" />
+          <span>
+            <strong>Medição salva.</strong> {RANGE_NOTICE}
+          </span>
+        </p>
+        <Link href="/glicemia" className="flex min-h-14 items-center justify-center rounded-lg bg-primary px-5 text-lg font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          Ver meus registros
+        </Link>
+        <Link href="/alertas" className="flex min-h-12 items-center justify-center text-base underline underline-offset-4">
+          Mudar a faixa dos avisos
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={formAction} className="flex flex-col gap-6">

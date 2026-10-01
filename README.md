@@ -77,6 +77,15 @@ Opcional, ativada pela própria pessoa em **Perfil → Verificação em duas eta
 
 Atenção: o segredo do aplicativo autenticador e os códigos de recuperação ficam **criptografados com `BETTER_AUTH_SECRET`**. Trocar esse valor invalida os 2FA por aplicativo já configurados (a pessoa precisaria desativar e configurar de novo). Se alguém perder o acesso, o administrador pode remover a verificação direto no banco: `update users set two_factor_enabled = false where email = '...'; delete from two_factors where user_id = '...';`
 
+## Orientações, lembretes e faixa de avisos
+
+- **Orientações** (`/orientacoes`): guia estático em português sobre como registrar medições, anotar observações, se preparar para a consulta e conferir os dados. Não traz metas clínicas nem conduta.
+- **Alertas e lembretes** (`/alertas`), tabelas `reminders` e `alert_settings` (migração 0012, só adiciona tabelas):
+  - *Lembretes*: horário, dias da semana e fuso (lista de fusos do Brasil; padrão = fuso do perfil). Editar, pausar e excluir. Até 10 por pessoa. O envio é por **e-mail, sem nenhum dado de saúde** (não há notificação na tela bloqueada).
+  - *Faixa pessoal*: limites inferior e superior (20–600 mg/dL), **sempre vazios até a pessoa preencher** e desligados por padrão. Só depois de salvar uma medição, e só com o recurso ativo e os dois limites, a tela mostra a mensagem neutra. Nada é classificado nem sugerido.
+  - A faixa de avisos é separada das *Metas* (que marcam os registros). Decisão: a mais simples e sem surpresa, pois nenhuma das duas é preenchida pelo app.
+- **Para os lembretes saírem em produção** são necessários: e-mail configurado (Resend, acima), a variável `CRON_SECRET` e um agendador que chame `GET /api/cron/lembretes` com `Authorization: Bearer <CRON_SECRET>` a cada 10–15 minutos. O lembrete é enviado na janela de até 2 h depois do horário, uma vez por dia. No plano gratuito da Vercel, o cron nativo só roda 1 vez por dia: use um agendador externo (ex.: cron-job.org) ou o plano Pro (`vercel.json` com `crons`).
+
 ## Segurança e privacidade
 
 - Toda consulta filtra pelo `userId` da sessão; acesso de familiar passa por `getAccessibleModules`.
