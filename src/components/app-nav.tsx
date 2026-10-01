@@ -46,8 +46,8 @@ export function AppNav() {
         </div>
       </header>
 
-      <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur">
-        <ul className="mx-auto flex max-w-3xl px-2 pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Principal" className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur md:inset-x-auto md:bottom-4 md:left-1/2 md:-translate-x-1/2 md:rounded-full md:border md:shadow-lg">
+        <ul className="mx-auto flex max-w-3xl px-2 pb-[env(safe-area-inset-bottom)] md:w-[34rem] md:pb-0">
           {primary.map(({ href, label, icon: Icon }) => {
             const active = isActive(href);
             return (
@@ -55,7 +55,7 @@ export function AppNav() {
                 <Link
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className="group flex min-h-[4.5rem] flex-col items-center justify-center gap-1 py-2 text-sm font-medium text-muted-foreground aria-[current=page]:font-bold aria-[current=page]:text-primary"
+                  className="group flex min-h-[4.5rem] flex-col rounded-full items-center justify-center gap-1 py-2 text-sm font-medium text-muted-foreground aria-[current=page]:font-bold aria-[current=page]:text-primary"
                 >
                   <span className="grid h-8 w-14 place-items-center rounded-full transition-colors group-aria-[current=page]:bg-accent">
                     <Icon aria-hidden className="size-6" strokeWidth={active ? 2.5 : 2} />

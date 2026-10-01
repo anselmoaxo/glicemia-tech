@@ -10,7 +10,7 @@ export type EmailContent = { subject: string; html: string; text: string };
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-const INK = "#0f3d4c";
+const INK = "#4338ca";
 const FONT = "'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
 
 /** Só aceita endereços http(s); qualquer outra coisa vira o endereço do app. */
@@ -34,12 +34,12 @@ type Shell = {
 
 function shell(p: Shell): string {
   const paragraphs = p.intro
-    .map((t) => `<p class="txt" style="margin:0 0 16px;font-size:18px;line-height:1.6;color:#10232a">${t}</p>`)
+    .map((t) => `<p class="txt" style="margin:0 0 16px;font-size:18px;line-height:1.6;color:#0f1b3d">${t}</p>`)
     .join("");
 
   const box = p.box
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 20px"><tr><td class="box" style="background:${
-        p.box.tone === "alert" ? "#fbe6dc" : "#eef3f1"
+        p.box.tone === "alert" ? "#fbe6dc" : "#f5f6fc"
       };border-radius:14px;padding:18px 20px;text-align:center;font-family:${FONT}">${p.box.html}</td></tr></table>`
     : "";
 
@@ -47,12 +47,12 @@ function shell(p: Shell): string {
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 12px"><tr><td align="center">
 <a class="btn" href="${esc(p.button.url)}" style="display:block;background:${INK};color:#ffffff;text-decoration:none;font-size:19px;font-weight:700;line-height:1.2;padding:18px 24px;border-radius:14px;text-align:center;font-family:${FONT}">${esc(p.button.label)}</a>
 </td></tr></table>
-<p class="muted" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#4a5f66">Se o botão não abrir, copie este endereço e cole no navegador:<br><span style="word-break:break-all"><a href="${esc(p.button.url)}" class="muted" style="color:#4a5f66">${esc(p.button.url)}</a></span></p>`
+<p class="muted" style="margin:0 0 20px;font-size:14px;line-height:1.5;color:#4b5578">Se o botão não abrir, copie este endereço e cole no navegador:<br><span style="word-break:break-all"><a href="${esc(p.button.url)}" class="muted" style="color:#4b5578">${esc(p.button.url)}</a></span></p>`
     : "";
 
   const notes = p.notes.length
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 4px"><tr><td class="box" style="background:#eef3f1;border-left:4px solid ${INK};border-radius:8px;padding:14px 16px;font-family:${FONT}">${p.notes
-        .map((n, i) => `<p class="txt" style="margin:${i === 0 ? 0 : 8}px 0 0;font-size:15px;line-height:1.5;color:#10232a">${n}</p>`)
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 4px"><tr><td class="box" style="background:#f5f6fc;border-left:4px solid ${INK};border-radius:8px;padding:14px 16px;font-family:${FONT}">${p.notes
+        .map((n, i) => `<p class="txt" style="margin:${i === 0 ? 0 : 8}px 0 0;font-size:15px;line-height:1.5;color:#0f1b3d">${n}</p>`)
         .join("")}</td></tr></table>`
     : "";
 
@@ -66,12 +66,12 @@ function shell(p: Shell): string {
 <title>${esc(p.title)}</title>
 <style>
   @media (prefers-color-scheme: dark) {
-    .page { background:#0b1a1f !important; }
-    .card { background:#13262d !important; }
-    .txt { color:#eef3f1 !important; }
-    .muted, .muted a { color:#a9bcc2 !important; }
-    .box { background:#1b3640 !important; }
-    .btn { background:#bff0da !important; color:#0f3d4c !important; }
+    .page { background:#0c1030 !important; }
+    .card { background:#161b44 !important; }
+    .txt { color:#f5f6fc !important; }
+    .muted, .muted a { color:#b4bbe0 !important; }
+    .box { background:#232a5c !important; }
+    .btn { background:#c7ccff !important; color:#1e1b5e !important; }
   }
   @media only screen and (max-width:480px) {
     .pad { padding:24px 18px !important; }
@@ -79,23 +79,23 @@ function shell(p: Shell): string {
   }
 </style>
 </head>
-<body class="page" style="margin:0;padding:0;background:#eef3f1;font-family:${FONT}">
+<body class="page" style="margin:0;padding:0;background:#f5f6fc;font-family:${FONT}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;font-size:1px;line-height:1px">${esc(p.preheader)}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:#eef3f1">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:#f5f6fc">
 <tr><td align="center" style="padding:24px 12px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
     <tr><td style="background:${INK};border-radius:18px 18px 0 0;padding:18px 28px">
       <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td style="padding-right:10px;vertical-align:middle"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" width="36" height="36" style="width:36px;height:36px;background:#1d5a6d;border-radius:10px;font-size:20px;line-height:36px;text-align:center">&#128167;</td></tr></table></td>
+        <td style="padding-right:10px;vertical-align:middle"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" width="36" height="36" style="width:36px;height:36px;background:#5b4bdb;border-radius:10px;font-size:20px;line-height:36px;text-align:center">&#128167;</td></tr></table></td>
         <td style="vertical-align:middle;font-family:${FONT};font-size:21px;font-weight:700;color:#ffffff;letter-spacing:-0.2px">Glicose Tech</td>
       </tr></table>
     </td></tr>
     <tr><td class="card pad" style="background:#ffffff;border-radius:0 0 18px 18px;padding:32px 30px;font-family:${FONT}">
-      <h1 class="txt title" style="margin:0 0 18px;font-size:28px;line-height:1.2;color:#10232a;letter-spacing:-0.3px">${esc(p.title)}</h1>
+      <h1 class="txt title" style="margin:0 0 18px;font-size:28px;line-height:1.2;color:#0f1b3d;letter-spacing:-0.3px">${esc(p.title)}</h1>
       ${paragraphs}${box}${button}${notes}
     </td></tr>
     <tr><td style="padding:18px 8px;text-align:center;font-family:${FONT}">
-      <p class="muted" style="margin:0;font-size:13px;line-height:1.6;color:#4a5f66">Glicose Tech · seu caderno de glicemia<br>Esta mensagem foi enviada automaticamente. Não é preciso responder.<br><a href="${esc(p.appUrl)}" class="muted" style="color:#4a5f66">${esc(p.appUrl.replace(/^https?:\/\//, ""))}</a></p>
+      <p class="muted" style="margin:0;font-size:13px;line-height:1.6;color:#4b5578">Glicose Tech · seu caderno de glicemia<br>Esta mensagem foi enviada automaticamente. Não é preciso responder.<br><a href="${esc(p.appUrl)}" class="muted" style="color:#4b5578">${esc(p.appUrl.replace(/^https?:\/\//, ""))}</a></p>
     </td></tr>
   </table>
 </td></tr></table>
