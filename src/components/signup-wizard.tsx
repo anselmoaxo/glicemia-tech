@@ -9,6 +9,7 @@ import { AboutFields, DiabetesFields } from "@/components/health-fields";
 import { PhoneField } from "@/components/phone-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { CAPTCHA_REQUIRED, signupErrorMessage } from "@/lib/auth-errors";
@@ -205,7 +206,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "", verifyEmail = fal
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="password" className="text-base">Senha (mínimo 8 caracteres)</Label>
-          <Input id="password" name="password" type="password" autoComplete="new-password" className="h-12 text-base" />
+          <PasswordInput id="password" name="password" autoComplete="new-password" className="h-12 text-base" />
         </div>
         <PhoneField id="w-phone" purpose="Usaremos só para avisos importantes do app, em breve. Sem propaganda." />
       </div>

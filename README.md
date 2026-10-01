@@ -93,3 +93,15 @@ Atenção: o segredo do aplicativo autenticador e os códigos de recuperação f
 - Links do médico respondem com `no-store`, `no-referrer` e `noindex`.
 - O service worker não faz cache: dados de saúde não ficam no cache do navegador.
 - Exclusão de conta no Perfil apaga todos os dados (cascade).
+
+## Novidades de privacidade, assistente e administração (migração 0013)
+
+- **Migração**: `npm run db:migrate` aplica `0013` (só adiciona tabelas e colunas: `profile_photos`, `access_logs`, `consent_logs`,
+  `support_requests`, `professional_profiles`, `profiles.tracking_purpose`, `profiles.guardian_consent_at`).
+- **Nenhuma variável nova**: o assistente não usa serviço externo e a foto fica no banco. Nada de segredo no frontend.
+- **Administrador exige 2FA**: quem está em `ADMIN_USER_IDS` precisa ativar a verificação em duas etapas em *Perfil*; sem isso
+  `/admin` redireciona ao Perfil.
+- **Como testar**: `/assistente` (pergunte "2 pães franceses", "quanto de insulina devo tomar" e "quem ganhou o jogo");
+  `/perfil` (foto, finalidade, menor de idade); `/perfil/profissional`; `/privacidade` (exportar e abrir solicitação);
+  `/compartilhar` (quem acessou); `/admin/solicitacoes`.
+- Pendências jurídicas e decisões em aberto: [docs/privacidade-e-pendencias.md](docs/privacidade-e-pendencias.md).

@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/session";
 export const metadata: Metadata = { title: "Mais" };
 
 const items = [
+  { href: "/assistente", label: "Assistente (dúvidas sobre diabetes e carboidratos)" },
   { href: "/insulina", label: "Insulina" },
   { href: "/metas", label: "Metas de glicemia" },
   { href: "/alertas", label: "Alertas e lembretes" },
@@ -14,6 +15,7 @@ const items = [
   { href: "/compartilhar", label: "Compartilhar com familiar" },
   { href: "/familia", label: "Acompanhando familiares" },
   { href: "/perfil", label: "Meu perfil" },
+  { href: "/privacidade", label: "Privacidade e meus dados" },
 ];
 
 export default async function MaisPage() {

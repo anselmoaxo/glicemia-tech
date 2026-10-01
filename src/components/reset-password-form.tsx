@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
@@ -49,11 +49,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <div className="flex flex-col gap-2">
         <Label htmlFor="next" className="text-base">Nova senha (mínimo 8 caracteres)</Label>
-        <Input id="next" name="next" type="password" autoComplete="new-password" className="h-12 text-base" required />
+        <PasswordInput id="next" name="next" autoComplete="new-password" className="h-12 text-base" required />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="confirm" className="text-base">Repita a nova senha</Label>
-        <Input id="confirm" name="confirm" type="password" autoComplete="new-password" className="h-12 text-base" required />
+        <PasswordInput id="confirm" name="confirm" autoComplete="new-password" className="h-12 text-base" required />
       </div>
       {error && (
         <div role="alert" className="flex flex-col gap-2">

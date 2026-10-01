@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
@@ -39,15 +39,15 @@ export function ChangePasswordForm() {
       <h2 className="text-xl font-semibold">Alterar senha</h2>
       <div className="flex flex-col gap-2">
         <Label htmlFor="current" className="text-base">Senha atual</Label>
-        <Input id="current" name="current" type="password" autoComplete="current-password" required className="h-12 text-base" />
+        <PasswordInput id="current" name="current" autoComplete="current-password" required className="h-12 text-base" />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="next" className="text-base">Nova senha (mínimo 8 caracteres)</Label>
-        <Input id="next" name="next" type="password" autoComplete="new-password" required className="h-12 text-base" />
+        <PasswordInput id="next" name="next" autoComplete="new-password" required className="h-12 text-base" />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="confirm" className="text-base">Repita a nova senha</Label>
-        <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required className="h-12 text-base" />
+        <PasswordInput id="confirm" name="confirm" autoComplete="new-password" required className="h-12 text-base" />
       </div>
       {message && (
         <p role={message.ok ? "status" : "alert"} className={`text-base font-medium ${message.ok ? "" : "text-destructive"}`}>

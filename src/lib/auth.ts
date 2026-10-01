@@ -176,6 +176,7 @@ export const auth = betterAuth({
               diagnosisYear: yearsToDiagnosisYear(d?.yearsWithDiabetes ?? null),
             })
             .onConflictDoNothing();
+          await db.insert(schema.consentLogs).values({ userId: user.id, kind: "lgpd", version: "2026-10" });
         },
       },
     },

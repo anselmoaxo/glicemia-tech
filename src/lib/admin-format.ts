@@ -19,4 +19,8 @@ export const ACTION_LABEL = {
   suspend: "Suspendeu",
   unsuspend: "Reativou",
   delete: "Excluiu",
+  request_update: "Atualizou solicitação de",
+  link_revoke: "Revogou vínculo familiar de",
+  professional_verify: "Verificou o registro profissional de",
+  professional_reject: "Recusou o registro profissional de",
 } as const;

@@ -4,6 +4,14 @@ import { ACTION_LABEL, fmtDateTime } from "@/lib/admin-format";
 import { getOverview } from "@/lib/admin-queries";
 import { addDaysStr } from "@/lib/reports/range";
 import { dateToLocalInputs } from "@/lib/datetime";
+import { emailEnabled, emailVerificationRequired } from "@/lib/email-flags";
+
+const Flag = ({ label, on, hint }: { label: string; on: boolean; hint?: string }) => (
+  <li>
+    {label}: <strong className={on ? "text-ok" : "text-high"}>{on ? "configurado" : "não configurado"}</strong>
+    {!on && hint && <span className="text-muted-foreground"> ({hint})</span>}
+  </li>
+);
 
 const Stat = ({ label, value, hint }: { label: string; value: number; hint?: string }) => (
   <div className="rounded-2xl border bg-card p-4">
@@ -49,6 +57,17 @@ export default async function AdminPage() {
           </li>
           <li>Bloqueio por tentativas: <strong className="text-ok">ativo</strong> (5 senhas erradas = 15 minutos)</li>
           <li>Contas bloqueadas agora: <strong>{o.locked}</strong></li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="integracoes" className="rounded-2xl border bg-card p-4">
+        <h2 id="integracoes" className="text-xl font-bold">Integrações e parâmetros</h2>
+        <p className="text-base text-muted-foreground">Só mostra se existe configuração; os valores nunca aparecem aqui.</p>
+        <ul className="mt-2 flex flex-col gap-1 text-base">
+          <Flag label="E-mail (Resend)" on={emailEnabled()} hint="falta RESEND_API_KEY" />
+          <Flag label="Confirmação de e-mail obrigatória" on={emailVerificationRequired()} hint="REQUIRE_EMAIL_VERIFICATION" />
+          <Flag label="Lembretes por e-mail (cron)" on={Boolean(process.env.CRON_SECRET)} hint="falta CRON_SECRET" />
+          <li>Verificação em duas etapas: <strong className="text-ok">obrigatória para administradores</strong></li>
         </ul>
       </section>
 

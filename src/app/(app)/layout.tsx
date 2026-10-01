@@ -1,10 +1,15 @@
 import { AppNav } from "@/components/app-nav";
+import { redirect } from "next/navigation";
+import { ageFromBirthDate } from "@/lib/profile-utils";
 import { getProfile } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
   const profile = await getProfile(user.id);
+  // Menor de 18 anos só usa o app depois que um responsável legal confirma por e-mail.
+  const age = ageFromBirthDate(profile.birthDate);
+  if (age !== null && age < 18 && !profile.guardianConsentAt) redirect("/responsavel");
   return (
     <>
       <a

@@ -5,6 +5,7 @@ import { getReportData } from "@/lib/reports/data";
 import { resolveRange } from "@/lib/reports/range";
 import { pdfResponse } from "@/lib/reports/response";
 import { getAccessibleModules } from "@/lib/sharing/access";
+import { logAccess } from "@/lib/privacy/access-log";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,8 @@ export async function GET(request: NextRequest) {
 
   const modules = await getAccessibleModules(session.user.id, ownerId);
   if (!modules.has("reports")) return new Response("Não encontrado", { status: 404 });
+
+  if (ownerId !== session.user.id) await logAccess(ownerId, session.user.id, "relatorio");
 
   const range = resolveRange(
     { dias: params.get("dias"), from: params.get("from"), to: params.get("to") },

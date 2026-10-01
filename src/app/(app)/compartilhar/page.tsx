@@ -4,6 +4,8 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { requireUser } from "@/lib/session";
 import { moduleLabel } from "@/lib/sharing/modules";
 import { listFamilyMembers } from "@/lib/sharing/queries";
+import { fmtDateTime } from "@/lib/admin-format";
+import { listAccessLogs } from "@/lib/privacy/access-log";
 import { revokeFamilyMember } from "./actions";
 
 export const metadata: Metadata = { title: "Compartilhar" };
@@ -12,7 +14,7 @@ const STATUS = { pending: "Convite pendente", accepted: "Ativo", revoked: "Revog
 
 export default async function CompartilharPage() {
   const user = await requireUser();
-  const members = await listFamilyMembers(user.id);
+  const [members, accesses] = await Promise.all([listFamilyMembers(user.id), listAccessLogs(user.id)]);
 
   return (
     <section className="flex flex-col gap-8">
@@ -39,6 +41,23 @@ export default async function CompartilharPage() {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-xl font-semibold">Quem acessou meus dados</h2>
+        {accesses.length === 0 && <p className="text-base text-muted-foreground">Nenhum acesso de familiares até agora.</p>}
+        <ul className="flex flex-col gap-2">
+          {accesses.map((a) => (
+            <li key={a.id} className="rounded-2xl border bg-card p-3 text-base">
+              <span className="font-semibold">{a.viewerName ?? "Conta removida"}</span> ·{" "}
+              {a.resource === "relatorio" ? "baixou o relatório" : "viu o acompanhamento"}
+              <span className="block text-muted-foreground">{fmtDateTime(a.createdAt)}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="text-sm text-muted-foreground">
+          Familiares só leem: não editam nem excluem nada. Revogue o acesso quando quiser.
+        </p>
       </div>
     </section>
   );

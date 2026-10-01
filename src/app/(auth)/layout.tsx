@@ -8,6 +8,9 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         <p className="text-lg text-muted-foreground">Seu caderno de glicemia, simples de usar todos os dias.</p>
       </div>
       <div className="rounded-3xl border bg-card p-5 sm:p-6">{children}</div>
+      <p className="text-center text-base text-muted-foreground">
+        <a href="/politica-de-privacidade" className="underline underline-offset-4">Política de Privacidade</a>
+      </p>
     </main>
   );
 }

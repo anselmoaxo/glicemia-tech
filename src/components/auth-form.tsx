@@ -7,6 +7,7 @@ import { Recaptcha, type RecaptchaHandle } from "@/components/recaptcha";
 import { TwoFactorChallenge } from "@/components/two-factor-challenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { CAPTCHA_REQUIRED, loginErrorMessage } from "@/lib/auth-errors";
@@ -63,7 +64,7 @@ export function AuthForm({ next = "/inicio", siteKey = "" }: { next?: string; si
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="password" className="text-base">Senha</Label>
-        <Input id="password" name="password" type="password" autoComplete="current-password" className="h-12 text-base" required />
+        <PasswordInput id="password" name="password" autoComplete="current-password" className="h-12 text-base" required />
       </div>
       <Link href="/esqueci-senha" className="-mt-2 flex min-h-12 items-center text-base font-semibold underline underline-offset-4">
         Esqueci minha senha

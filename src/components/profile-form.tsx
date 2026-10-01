@@ -20,6 +20,7 @@ type Props = {
   fontScale: number;
   alertEmailSelf: boolean;
   alertEmailFamily: boolean;
+  trackingPurpose: string | null;
 };
 
 const selectClass =
@@ -45,6 +46,19 @@ export function ProfileForm(p: Props) {
       <HealthFields
         defaults={{ birthDate: p.birthDate, sex: p.sex, diabetesType: p.diabetesType, yearsWithDiabetes: p.yearsWithDiabetes }}
       />
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="trackingPurpose" className="text-base">Por que você acompanha a glicose? (opcional)</Label>
+        <select id="trackingPurpose" name="trackingPurpose" defaultValue={p.trackingPurpose ?? ""} className={selectClass}>
+          <option value="">Prefiro não informar</option>
+          <option value="pessoal">Controle pessoal</option>
+          <option value="diabetes">Acompanhamento de diabetes</option>
+          <option value="outro">Outra necessidade</option>
+        </select>
+        <p className="text-sm text-muted-foreground">Informação sua, usada só para personalizar o app. Não é diagnóstico.</p>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Menores de 18 anos precisam da confirmação de um responsável legal, feita por e-mail (o app pede ao entrar).
+      </p>
       <div className="flex flex-col gap-2">
         <Label htmlFor="fontScale" className="text-base">Tamanho do texto</Label>
         <select id="fontScale" name="fontScale" defaultValue={p.fontScale} className={selectClass}>

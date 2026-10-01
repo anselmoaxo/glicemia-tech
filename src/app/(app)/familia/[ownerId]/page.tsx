@@ -13,6 +13,7 @@ import { getTimezone } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 import { getAccessibleModules } from "@/lib/sharing/access";
 import { getOwnerName } from "@/lib/sharing/queries";
+import { logAccess } from "@/lib/privacy/access-log";
 
 export const metadata: Metadata = { title: "Acompanhamento", robots: { index: false } };
 
@@ -28,6 +29,7 @@ export default async function FamiliaOwnerPage({ params }: PageProps<"/familia/[
 
   const modules = await getAccessibleModules(viewer.id, ownerId);
   if (modules.size === 0) notFound();
+  await logAccess(ownerId, viewer.id, "acompanhamento");
 
   const [tz, ownerName] = await Promise.all([getTimezone(ownerId), getOwnerName(ownerId)]);
   const [readings, targets, meals, doses, insulin] = await Promise.all([
@@ -40,9 +42,13 @@ export default async function FamiliaOwnerPage({ params }: PageProps<"/familia/[
 
   return (
     <section className="flex flex-col gap-8">
-      <div>
+      <div className="flex items-center gap-4">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/api/foto/${encodeURIComponent(ownerId)}`} alt="" width={56} height={56} className="size-14 rounded-full bg-secondary object-cover" />
+        <div>
         <h1 className="text-3xl font-bold">{ownerName}</h1>
         <p className="text-base text-muted-foreground">Somente leitura · últimos registros</p>
+        </div>
       </div>
 
       {readings && (

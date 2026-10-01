@@ -9,3 +9,4 @@ export * from "./alerts";
 export * from "./reports";
 export * from "./admin";
 export * from "./security";
+export * from "./privacy";

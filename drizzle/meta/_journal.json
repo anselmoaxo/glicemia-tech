@@ -92,6 +92,20 @@
       "when": 1790821377743,
       "tag": "0012_panoramic_lady_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790867919974,
+      "tag": "0013_stiff_johnny_blaze",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790868606960,
+      "tag": "0014_serious_captain_flint",
+      "breakpoints": true
     }
   ]
 }

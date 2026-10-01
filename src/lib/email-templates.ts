@@ -185,6 +185,32 @@ export function inviteEmail(p: { ownerName: string; url: string; appUrl: string;
   };
 }
 
+export function guardianEmail(p: { minorName: string; url: string; appUrl: string }): EmailContent {
+  const url = safeUrl(p.url, p.appUrl);
+  return {
+    subject: `Confirme como responsável por ${p.minorName} no Glicose Tech`,
+    html: shell({
+      preheader: "Confirmação de responsável legal.",
+      title: "Confirmação do responsável legal",
+      intro: [
+        `<strong>${esc(p.minorName)}</strong> é menor de 18 anos e indicou este e-mail como o do responsável legal para usar o Glicose Tech.`,
+        "Se você é pai, mãe ou responsável legal e concorda, confirme abaixo. Você também passará a acompanhar os registros, somente para leitura.",
+      ],
+      button: { label: "Confirmar como responsável", url },
+      notes: [
+        "O link vale por <strong>7 dias</strong>. Para confirmar, entre ou crie uma conta usando <strong>este mesmo e-mail</strong>.",
+        "Se você não reconhece este pedido, ignore a mensagem: nada será liberado.",
+      ],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      `${p.minorName} é menor de 18 anos e indicou este e-mail como o do responsável legal no Glicose Tech.`,
+      `Para confirmar (entre com este mesmo e-mail): ${url}`,
+      "O link vale por 7 dias. Se não reconhece o pedido, ignore.",
+    ]),
+  };
+}
+
 // ───────────────────────────── Alerta de glicemia ─────────────────────────────
 const SAFE_MESSAGE =
   "Este valor está fora da faixa configurada por você. Consulte seu plano de cuidados ou profissional de saúde se necessário.";

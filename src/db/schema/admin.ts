@@ -15,6 +15,6 @@ export const adminAuditLogs = pgTable(
   },
   (t) => [
     index("admin_audit_logs_created_idx").on(t.createdAt.desc()),
-    check("admin_audit_logs_action_chk", sql`${t.action} in ('suspend','unsuspend','delete')`),
+    check("admin_audit_logs_action_chk", sql`${t.action} in ('suspend','unsuspend','delete','request_update','link_revoke','professional_verify','professional_reject')`),
   ],
 );

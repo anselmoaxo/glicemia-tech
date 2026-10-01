@@ -21,6 +21,10 @@ export const profiles = pgTable(
     // Alertas de valores fora da faixa por e-mail (desativados por padrão)
     alertEmailSelf: boolean("alert_email_self").notNull().default(false),
     alertEmailFamily: boolean("alert_email_family").notNull().default(false),
+    // Finalidade do acompanhamento, informada pela própria pessoa (não é diagnóstico)
+    trackingPurpose: text("tracking_purpose"),
+    // Menor de idade: ciência de um responsável legal (registrada em consent_logs)
+    guardianConsentAt: timestamp("guardian_consent_at"),
     lgpdConsentAt: timestamp("lgpd_consent_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -35,6 +39,10 @@ export const profiles = pgTable(
     check(
       "profiles_diagnosis_year_chk",
       sql`${t.diagnosisYear} is null or ${t.diagnosisYear} between 1900 and 2200`,
+    ),
+    check(
+      "profiles_tracking_purpose_chk",
+      sql`${t.trackingPurpose} is null or ${t.trackingPurpose} in ('pessoal','diabetes','outro')`,
     ),
     check(
       "profiles_diabetes_type_chk",
