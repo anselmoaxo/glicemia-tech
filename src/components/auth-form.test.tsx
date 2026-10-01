@@ -51,13 +51,13 @@ describe("AuthForm com captcha", () => {
     expect(signIn).not.toHaveBeenCalled();
   });
 
-  it("pede que o link de confirmação reenviado leve à página de e-mail confirmado", async () => {
+  it("usa o destino pedido (ex.: convite) como callbackURL, para não desviar de volta ao início", async () => {
     const user = userEvent.setup();
-    render(<AuthForm />);
+    render(<AuthForm next="/convite/abc" />);
     await fill(user);
     await user.click(screen.getByRole("button", { name: "Entrar" }));
     await waitFor(() => expect(signIn).toHaveBeenCalledTimes(1));
-    expect(signIn.mock.calls[0][0].callbackURL).toBe("/email-confirmado");
+    expect(signIn.mock.calls[0][0].callbackURL).toBe("/convite/abc");
   });
 
   it("com chave marcada: envia o token no cabeçalho e segue para a próxima página", async () => {

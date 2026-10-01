@@ -31,7 +31,9 @@ export function AuthForm({ next = "/inicio", siteKey = "" }: { next?: string; si
     if (siteKey && !token) return setError(CAPTCHA_REQUIRED);
 
     setPending(true);
-    const res = await authClient.signIn.email({ ...parsed.data, callbackURL: "/email-confirmado" }, {
+    // callbackURL é o próprio destino: o Better Auth leva o navegador até ele depois de entrar (e o link de
+    // confirmação reenviado também). Qualquer outro endereço aqui desviaria quem entra pelo link de um convite.
+    const res = await authClient.signIn.email({ ...parsed.data, callbackURL: next }, {
       headers: siteKey && token ? { [CAPTCHA_HEADER]: token } : undefined,
     });
     setPending(false);

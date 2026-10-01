@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ResetPasswordForm } from "@/components/reset-password-form";
+import { redirectIfSignedIn } from "@/lib/signed-in";
 
 // O link do e-mail traz o token na URL: não deve vazar para outros sites nem ficar em cache.
 export const metadata: Metadata = { title: "Nova senha", referrer: "no-referrer", robots: { index: false, follow: false } };
 
 export default async function RedefinirSenhaPage({ searchParams }: PageProps<"/redefinir-senha">) {
   const { token, error } = await searchParams;
+  await redirectIfSignedIn();
   const valid = typeof token === "string" && token.length > 0 && token.length <= 200 && !error;
 
   return (

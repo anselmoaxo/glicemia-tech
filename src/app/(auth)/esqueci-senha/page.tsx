@@ -3,10 +3,12 @@ import Link from "next/link";
 import { ForgotPasswordForm } from "@/components/forgot-password-form";
 import { captchaEnabled, captchaSiteKey } from "@/lib/captcha";
 import { emailEnabled } from "@/lib/email-flags";
+import { redirectIfSignedIn } from "@/lib/signed-in";
 
 export const metadata: Metadata = { title: "Esqueci minha senha" };
 
-export default function EsqueciSenhaPage() {
+export default async function EsqueciSenhaPage() {
+  await redirectIfSignedIn();
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-3xl font-bold tracking-tight">Esqueci minha senha</h1>

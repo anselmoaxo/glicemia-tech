@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirectIfSignedIn } from "@/lib/signed-in";
 
 export const metadata: Metadata = { title: "E-mail confirmado", referrer: "no-referrer", robots: { index: false, follow: false } };
 
@@ -8,6 +9,7 @@ export const metadata: Metadata = { title: "E-mail confirmado", referrer: "no-re
 // aqui chegam quem não ficou logado e quem abriu um link inválido ou vencido.
 export default async function EmailConfirmadoPage({ searchParams }: PageProps<"/email-confirmado">) {
   const { error } = await searchParams;
+  await redirectIfSignedIn();
 
   if (error) {
     return (

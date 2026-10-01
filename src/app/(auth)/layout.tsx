@@ -1,9 +1,6 @@
-import { redirect } from "next/navigation";
 import { Logo } from "@/components/logo";
-import { getSession } from "@/lib/session";
 
-export default async function AuthLayout({ children }: LayoutProps<"/">) {
-  if (await getSession()) redirect("/inicio");
+export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-4 py-10">
       <div className="flex flex-col gap-3">
