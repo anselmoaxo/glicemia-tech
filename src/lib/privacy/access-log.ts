@@ -3,7 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { accessLogs, users } from "@/db/schema";
 
-export type AccessResource = "acompanhamento" | "relatorio";
+export type AccessResource = "acompanhamento" | "relatorio" | "configuracao";
 
 /** Registra que `viewerId` consultou dados de `ownerId`. Falha de log nunca derruba a página. */
 export async function logAccess(ownerId: string, viewerId: string, resource: AccessResource) {

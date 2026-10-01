@@ -9,6 +9,7 @@ import { classify } from "@/lib/glucose/classify";
 import { getTargets } from "@/lib/glucose/queries";
 import { getProfile } from "@/lib/profile";
 import { listGlucoseFamilyEmails } from "@/lib/sharing/queries";
+import { emitWebhook } from "@/lib/webhooks/service";
 
 type Owner = { id: string; name: string; email: string };
 
@@ -39,6 +40,9 @@ export async function syncReadingAlert(owner: Owner, readingId: string, isNew: b
     .returning({ id: alerts.id });
   if (!isNew) return;
 
+  // n8n (só se o usuário autorizou): o id do alerta é o id do evento, então não duplica
+  await emitWebhook(owner.id, "measurement_out_of_range", alert.id);
+
   const profile = await getProfile(owner.id);
   const log = (recipientType: "self" | "family", ok: boolean) =>
     db.insert(notifications).values({
@@ -53,7 +57,15 @@ export async function syncReadingAlert(owner: Owner, readingId: string, isNew: b
 
   if (profile.alertEmailSelf) {
     const mail = alertEmail({ value: reading.value, direction, appUrl, link: `${appUrl}/glicemia` });
-    await log("self", await sendEmail(owner.email, mail.subject, mail.html, mail.text));
+    await log(
+      "self",
+      await sendEmail(owner.email, mail.subject, mail.html, mail.text, {
+        userId: owner.id,
+        category: "alerta_medicao",
+        reason: "Medição fora da faixa pessoal",
+        idempotencyKey: `alert-${alert.id}-self`,
+      }),
+    );
   }
 
   if (profile.alertEmailFamily) {
@@ -65,7 +77,15 @@ export async function syncReadingAlert(owner: Owner, readingId: string, isNew: b
       link: `${appUrl}/familia/${owner.id}`,
     });
     for (const to of await listGlucoseFamilyEmails(owner.id)) {
-      await log("family", await sendEmail(to, mail.subject, mail.html, mail.text));
+      await log(
+        "family",
+        await sendEmail(to, mail.subject, mail.html, mail.text, {
+          userId: owner.id,
+          category: "alerta_medicao",
+          reason: "Aviso a familiar autorizado",
+          idempotencyKey: `alert-${alert.id}-${to}`,
+        }),
+      );
     }
   }
 }

@@ -42,7 +42,7 @@ export const profiles = pgTable(
     ),
     check(
       "profiles_tracking_purpose_chk",
-      sql`${t.trackingPurpose} is null or ${t.trackingPurpose} in ('pessoal','diabetes','outro')`,
+      sql`${t.trackingPurpose} is null or ${t.trackingPurpose} in ('pessoal','diabetes','outro','sem_diabetes')`,
     ),
     check(
       "profiles_diabetes_type_chk",

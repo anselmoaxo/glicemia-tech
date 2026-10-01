@@ -50,7 +50,7 @@ export default async function CompartilharPage() {
           {accesses.map((a) => (
             <li key={a.id} className="rounded-2xl border bg-card p-3 text-base">
               <span className="font-semibold">{a.viewerName ?? "Conta removida"}</span> ·{" "}
-              {a.resource === "relatorio" ? "baixou o relatório" : "viu o acompanhamento"}
+              {a.resource === "relatorio" ? "baixou o relatório" : a.resource === "configuracao" ? "alterou as configurações de acompanhamento" : "viu o acompanhamento"}
               <span className="block text-muted-foreground">{fmtDateTime(a.createdAt)}</span>
             </li>
           ))}

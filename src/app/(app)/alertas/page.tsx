@@ -7,11 +7,23 @@ import { getRangeSettings, listReminders } from "@/lib/alerts/settings";
 import { emailEnabled } from "@/lib/email-flags";
 import { getProfile } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
+import { getTrackingContext } from "@/lib/tracking/plan";
 
 export const metadata: Metadata = { title: "Alertas e lembretes" };
 
 export default async function AlertasPage() {
   const user = await requireUser();
+  if (!(await getTrackingContext(user.id)).diabetesVisible) {
+    return (
+      <section className="flex flex-col gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">Alertas e lembretes</h1>
+        <p className="rounded-2xl border bg-card p-4 text-base">
+          Seu perfil está marcado como &ldquo;não tenho diabetes&rdquo;, então os alertas e lembretes de medição ficam ocultos. Se houver
+          um acompanhamento orientado por um profissional, ative-o em <Link href="/acompanhamento" className="underline">Configurações de acompanhamento</Link>.
+        </p>
+      </section>
+    );
+  }
   const [range, reminders, profile] = await Promise.all([
     getRangeSettings(user.id),
     listReminders(user.id),

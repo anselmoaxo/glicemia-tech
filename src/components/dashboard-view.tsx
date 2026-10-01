@@ -2,7 +2,7 @@ import { Droplet, Pill, Syringe, TriangleAlert, Utensils } from "lucide-react";
 import Link from "next/link";
 import type { GlucoseStatus, Targets } from "@/lib/glucose/classify";
 import { PERIODS, type Period } from "@/lib/glucose/period";
-import { GlucoseChart } from "./glucose-chart";
+import { GlucoseChart } from "./glucose-chart-lazy";
 import { EmptyMeterPanel, MeterPanel } from "./meter-panel";
 
 export type DashboardProps = {

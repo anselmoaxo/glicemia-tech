@@ -26,6 +26,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           <Link href="/admin/profissionais" className="flex min-h-11 items-center rounded-full px-4 text-base font-semibold hover:bg-accent">
             Profissionais
           </Link>
+          <Link href="/admin/emails" className="flex min-h-11 items-center rounded-full px-4 text-base font-semibold hover:bg-accent">
+            E-mails
+          </Link>
         </nav>
       </div>
       {children}

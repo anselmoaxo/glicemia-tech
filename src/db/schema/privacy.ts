@@ -30,7 +30,7 @@ export const accessLogs = pgTable(
   },
   (t) => [
     index("access_logs_owner_idx").on(t.ownerId, t.createdAt.desc()),
-    check("access_logs_resource_chk", sql`${t.resource} in ('acompanhamento','relatorio')`),
+    check("access_logs_resource_chk", sql`${t.resource} in ('acompanhamento','relatorio','configuracao')`),
   ],
 );
 

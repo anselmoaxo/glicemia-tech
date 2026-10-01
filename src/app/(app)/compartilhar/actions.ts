@@ -65,7 +65,11 @@ export async function inviteFamily(_: InviteState, formData: FormData): Promise<
     modules: modules.map(moduleLabel),
     days: INVITE_DAYS,
   });
-  const emailSent = await sendEmail(email, mail.subject, mail.html, mail.text);
+  const emailSent = await sendEmail(email, mail.subject, mail.html, mail.text, {
+    userId: user.id,
+    category: "convite",
+    reason: "Convite para acompanhar",
+  });
 
   revalidatePath("/compartilhar");
   return { ok: true, emailSent, link: emailSent ? undefined : link };

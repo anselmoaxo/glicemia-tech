@@ -53,6 +53,7 @@ export function ProfileForm(p: Props) {
           <option value="pessoal">Controle pessoal</option>
           <option value="diabetes">Acompanhamento de diabetes</option>
           <option value="outro">Outra necessidade</option>
+          <option value="sem_diabetes">Não tenho diabetes</option>
         </select>
         <p className="text-sm text-muted-foreground">Informação sua, usada só para personalizar o app. Não é diagnóstico.</p>
       </div>

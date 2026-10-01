@@ -13,7 +13,9 @@ import { getLastMeal } from "@/lib/meals/queries";
 import { mealLabel } from "@/lib/meals/types";
 import { getTodayDoses } from "@/lib/medications/queries";
 import { getProfile } from "@/lib/profile";
+import { PlanNotice } from "@/components/plan-notice";
 import { requireUser } from "@/lib/session";
+import { getTrackingContext } from "@/lib/tracking/plan";
 
 export const metadata: Metadata = { title: "Início" };
 
@@ -26,7 +28,8 @@ export default async function InicioPage({ searchParams }: PageProps<"/inicio">)
   const now = new Date();
   const today = dateToLocalInputs(now, timezone).date;
 
-  const [latest, stats, series, targets, lastMeal, todayDoses, lastInsulin, recentAlerts] = await Promise.all([
+  const [{ diabetesVisible }, latest, stats, series, targets, lastMeal, todayDoses, lastInsulin, recentAlerts] = await Promise.all([
+    getTrackingContext(user.id),
     getLatestReading(user.id),
     getPeriodStats(user.id, since),
     getChartSeries(user.id, since),
@@ -42,6 +45,8 @@ export default async function InicioPage({ searchParams }: PageProps<"/inicio">)
   const next = pending.find((d) => d.scheduledFor >= now) ?? pending[0] ?? null;
 
   return (
+    <>
+    <PlanNotice userId={user.id} />
     <DashboardView
       firstName={user.name.split(" ")[0]}
       todayLabel={formatLongDate(now, timezone)}
@@ -69,7 +74,7 @@ export default async function InicioPage({ searchParams }: PageProps<"/inicio">)
         lastInsulin &&
         `${formatUnits(lastInsulin.units)} un. ${lastInsulin.typeName} · ${formatDateTime(lastInsulin.appliedAt, timezone)}`
       }
-      alerts={recentAlerts.map((a) => ({
+      alerts={(diabetesVisible ? recentAlerts : []).map((a) => ({
         id: a.id,
         text: `${a.value} mg/dL, ${a.direction === "low" ? "abaixo" : "acima"} da faixa · ${formatDateTime(a.measuredAt, timezone)}`,
       }))}
@@ -81,5 +86,6 @@ export default async function InicioPage({ searchParams }: PageProps<"/inicio">)
         metas: "/metas",
       }}
     />
+    </>
   );
 }

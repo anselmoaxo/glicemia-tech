@@ -15,7 +15,7 @@ const primary: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/mais", label: "Mais", icon: Ellipsis },
 ];
 
-const moreRoutes = ["/insulina", "/metas", "/alertas", "/orientacoes", "/compartilhar", "/familia", "/relatorios", "/perfil", "/assistente", "/privacidade", "/admin", "/mais"];
+const moreRoutes = ["/insulina", "/metas", "/acompanhamento", "/alertas", "/orientacoes", "/compartilhar", "/familia", "/relatorios", "/perfil", "/assistente", "/privacidade", "/admin", "/mais"];
 
 export function AppNav() {
   const pathname = usePathname();

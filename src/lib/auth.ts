@@ -8,9 +8,9 @@ import { after } from "next/server";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { captchaEnabled } from "@/lib/captcha";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, type EmailMeta } from "@/lib/email";
 import { emailEnabled, emailVerificationRequired } from "@/lib/email-flags";
-import { resetPasswordEmail, twoFactorCodeEmail, verificationEmail, type EmailContent } from "@/lib/email-templates";
+import { passwordChangedEmail, resetPasswordEmail, twoFactorCodeEmail, verificationEmail, type EmailContent } from "@/lib/email-templates";
 import { env } from "@/lib/env";
 import { lockMessage, lockStatus } from "@/lib/login-lock";
 import { attemptKey, clearAttempts, getAttemptState, recordFailure } from "@/lib/login-lock-store";
@@ -32,11 +32,11 @@ const bodyOf = (context: unknown): Record<string, unknown> => {
 const text = (v: unknown) => (typeof v === "string" ? v : "");
 
 /** Envia sem atrasar a resposta (e sem revelar, pelo tempo, se a conta existe). */
-function sendInBackground(to: string, m: EmailContent) {
+function sendInBackground(to: string, m: EmailContent, meta: EmailMeta) {
   try {
-    after(() => sendEmail(to, m.subject, m.html, m.text));
+    after(() => sendEmail(to, m.subject, m.html, m.text, meta));
   } catch {
-    void sendEmail(to, m.subject, m.html, m.text); // fora de uma requisição do Next (ex.: script)
+    void sendEmail(to, m.subject, m.html, m.text, meta); // fora de uma requisição do Next (ex.: script)
   }
 }
 
@@ -61,8 +61,19 @@ export const auth = betterAuth({
     requireEmailVerification: emailVerificationRequired(),
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true, // trocar a senha desconecta os outros aparelhos
+    onPasswordReset: async ({ user }) => {
+      sendInBackground(user.email, passwordChangedEmail({ name: user.name, appUrl: env.BETTER_AUTH_URL }), {
+        userId: user.id,
+        category: "seguranca",
+        reason: "Senha alterada",
+      });
+    },
     sendResetPassword: async ({ user, url }) => {
-      sendInBackground(user.email, resetPasswordEmail({ name: user.name, url, appUrl: env.BETTER_AUTH_URL }));
+      sendInBackground(user.email, resetPasswordEmail({ name: user.name, url, appUrl: env.BETTER_AUTH_URL }), {
+        userId: user.id,
+        category: "senha",
+        reason: "Link para redefinir a senha",
+      });
     },
   },
   emailVerification: {
@@ -71,7 +82,11 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60 * 24,
     sendVerificationEmail: async ({ user, url }) => {
-      sendInBackground(user.email, verificationEmail({ name: user.name, url, appUrl: env.BETTER_AUTH_URL }));
+      sendInBackground(user.email, verificationEmail({ name: user.name, url, appUrl: env.BETTER_AUTH_URL }), {
+        userId: user.id,
+        category: "verificacao",
+        reason: "Confirmação do e-mail",
+      });
     },
   },
 
@@ -115,8 +130,19 @@ export const auth = betterAuth({
         });
       }
     }),
-    // Conta a senha errada; uma entrada bem-sucedida zera a contagem.
+    // Conta a senha errada; uma entrada bem-sucedida zera a contagem. Também avisa por e-mail quando a senha é trocada.
     after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/change-password" && !isAPIError(ctx.context.returned)) {
+        const u = ctx.context.session?.user ?? ctx.context.newSession?.user;
+        if (u) {
+          sendInBackground(u.email, passwordChangedEmail({ name: u.name, appUrl: env.BETTER_AUTH_URL }), {
+            userId: u.id,
+            category: "seguranca",
+            reason: "Senha alterada",
+          });
+        }
+        return;
+      }
       if (ctx.path !== SIGN_IN) return;
       const email = emailFrom(ctx.body);
       if (!email) return;
@@ -210,7 +236,11 @@ export const auth = betterAuth({
               period: 3, // minutos
               storeOTP: "hashed" as const,
               sendOTP: async ({ user, otp }: { user: { name: string; email: string }; otp: string }) => {
-                sendInBackground(user.email, twoFactorCodeEmail({ name: user.name, code: otp, appUrl: env.BETTER_AUTH_URL, minutes: 3 }));
+                sendInBackground(user.email, twoFactorCodeEmail({ name: user.name, code: otp, appUrl: env.BETTER_AUTH_URL, minutes: 3 }), {
+                  userId: (user as { id?: string }).id ?? null,
+                  category: "duas_etapas",
+                  reason: "Código de entrada",
+                });
               },
             },
           }

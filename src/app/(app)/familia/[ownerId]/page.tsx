@@ -12,6 +12,7 @@ import { listLogs } from "@/lib/medications/queries";
 import { getTimezone } from "@/lib/profile";
 import { requireUser } from "@/lib/session";
 import { getAccessibleModules } from "@/lib/sharing/access";
+import { canManagePlan } from "@/lib/tracking/plan";
 import { getOwnerName } from "@/lib/sharing/queries";
 import { logAccess } from "@/lib/privacy/access-log";
 
@@ -31,7 +32,7 @@ export default async function FamiliaOwnerPage({ params }: PageProps<"/familia/[
   if (modules.size === 0) notFound();
   await logAccess(ownerId, viewer.id, "acompanhamento");
 
-  const [tz, ownerName] = await Promise.all([getTimezone(ownerId), getOwnerName(ownerId)]);
+  const [tz, ownerName, isGuardian] = await Promise.all([getTimezone(ownerId), getOwnerName(ownerId), canManagePlan(viewer.id, ownerId)]);
   const [readings, targets, meals, doses, insulin] = await Promise.all([
     modules.has("glucose") ? listReadings(ownerId, 1) : null,
     modules.has("glucose") ? getTargets(ownerId) : {},
@@ -48,6 +49,9 @@ export default async function FamiliaOwnerPage({ params }: PageProps<"/familia/[
         <div>
         <h1 className="text-3xl font-bold">{ownerName}</h1>
         <p className="text-base text-muted-foreground">Somente leitura · últimos registros</p>
+        {isGuardian && (
+          <a href={`/familia/${encodeURIComponent(ownerId)}/configuracoes`} className="text-base font-semibold underline">Configurar acompanhamento (responsável)</a>
+        )}
         </div>
       </div>
 

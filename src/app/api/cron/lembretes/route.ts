@@ -9,6 +9,8 @@ import { emailEnabled } from "@/lib/email-flags";
 import { reminderEmail } from "@/lib/email-templates";
 import { dateToLocalInputs } from "@/lib/datetime";
 import { env } from "@/lib/env";
+import { runPlanChecks } from "@/lib/tracking/checks";
+import { processDueDeliveries } from "@/lib/webhooks/service";
 
 // Chamado por um agendador (a cada 10–15 min) com `Authorization: Bearer <CRON_SECRET>`.
 // A Vercel envia esse cabeçalho sozinha quando CRON_SECRET existe e há um cron configurado.
@@ -25,12 +27,11 @@ function authorized(request: NextRequest) {
 export async function GET(request: NextRequest) {
   if (!process.env.CRON_SECRET) return NextResponse.json({ error: "not_configured" }, { status: 503 });
   if (!authorized(request)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!emailEnabled()) return NextResponse.json({ sent: 0, skipped: "email_not_configured" });
-
   const now = new Date();
   const rows = await db
     .select({
       id: reminders.id,
+      userId: users.id,
       email: users.email,
       timeLocal: reminders.timeLocal,
       daysMask: reminders.daysMask,
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     .where(and(eq(reminders.enabled, true), isNull(users.suspendedAt)));
 
   let sent = 0;
-  for (const r of rows) {
+  for (const r of emailEnabled() ? rows : []) {
     if (!isDue(r, now)) continue;
     const today = dateToLocalInputs(now, r.timezone).date;
     // reserva o envio do dia antes de mandar: duas chamadas seguidas não duplicam
@@ -54,7 +55,11 @@ export async function GET(request: NextRequest) {
       .returning({ id: reminders.id });
     if (claimed.length === 0) continue;
     const mail = reminderEmail({ appUrl: env.BETTER_AUTH_URL });
-    if (await sendEmail(r.email, mail.subject, mail.html, mail.text)) sent++;
+    if (await sendEmail(r.email, mail.subject, mail.html, mail.text, { userId: r.userId, category: "lembrete_medicao", reason: "Lembrete de medição agendado", idempotencyKey: `reminder-${r.id}-${today}` })) sent++;
   }
-  return NextResponse.json({ sent });
+
+  // verificações do plano (medição prevista sem registro, medicamento sem confirmação) e reenvio de webhooks pendentes
+  const planEvents = await runPlanChecks(now);
+  const webhooks = await processDueDeliveries();
+  return NextResponse.json({ sent, planEvents, webhooks });
 }

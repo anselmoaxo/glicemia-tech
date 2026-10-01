@@ -70,4 +70,30 @@ describe.skipIf(!url)("isolamento entre usuários", () => {
     expect((await getAccessibleModules(b, a)).size).toBe(0); // revogado
     expect((await getAccessibleModules(a, b)).size).toBe(0); // sem vínculo no sentido inverso
   });
+
+  it("familiar comum não edita o plano de acompanhamento nem webhook de outro perfil", async () => {
+    const { canManagePlan } = await import("@/lib/tracking/plan");
+    expect(await canManagePlan(a, a)).toBe(true); // a própria pessoa
+    expect(await canManagePlan(b, a)).toBe(false); // outro usuário (mesmo vinculado como familiar) não edita
+  });
+
+  it("evento do plano é registrado uma única vez por ocorrência", async () => {
+    const { db } = await import("@/db");
+    const { planEvents } = await import("@/db/schema");
+    const slotAt = new Date();
+    const claim = () =>
+      db.insert(planEvents).values({ userId: a, kind: "missed_measurement", slotKey: "measure:teste", slotAt, status: "unconfirmed" }).onConflictDoNothing().returning({ id: planEvents.id });
+    expect(await claim()).toHaveLength(1);
+    expect(await claim()).toHaveLength(0); // repetir não duplica
+  });
+
+  it("entrega de webhook repetida com o mesmo evento não duplica", async () => {
+    const { db } = await import("@/db");
+    const { webhookDeliveries } = await import("@/db/schema");
+    const eventId = crypto.randomUUID();
+    const enqueue = () =>
+      db.insert(webhookDeliveries).values({ userId: a, eventId, type: "measurement_missed" }).onConflictDoNothing().returning({ id: webhookDeliveries.id });
+    expect(await enqueue()).toHaveLength(1);
+    expect(await enqueue()).toHaveLength(0);
+  });
 });

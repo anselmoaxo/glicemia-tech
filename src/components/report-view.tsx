@@ -3,7 +3,7 @@ import { STATUS_LABEL } from "@/lib/glucose/classify";
 import { formatUnits, relationLabel } from "@/lib/insulin/options";
 import { mealLabel } from "@/lib/meals/types";
 import type { ReportData } from "@/lib/reports/data";
-import { GlucoseChart } from "./glucose-chart";
+import { GlucoseChart } from "./glucose-chart-lazy";
 import { StatCard } from "./stat-card";
 
 const br = (iso: string) => iso.split("-").reverse().join("/");

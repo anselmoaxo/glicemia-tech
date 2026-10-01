@@ -105,3 +105,10 @@ Atenção: o segredo do aplicativo autenticador e os códigos de recuperação f
   `/perfil` (foto, finalidade, menor de idade); `/perfil/profissional`; `/privacidade` (exportar e abrir solicitação);
   `/compartilhar` (quem acessou); `/admin/solicitacoes`.
 - Pendências jurídicas e decisões em aberto: [docs/privacidade-e-pendencias.md](docs/privacidade-e-pendencias.md).
+
+## Acompanhamento, n8n e histórico de e-mails (migração 0015)
+
+Detalhes, formato dos eventos, segurança e como testar: [docs/desempenho-e-integracoes.md](docs/desempenho-e-integracoes.md).
+Resumo: `npm run db:migrate`; opcionalmente `RESEND_WEBHOOK_SECRET` (status de entrega dos e-mails); e o agendador chamando
+`GET /api/cron/lembretes` (com `Authorization: Bearer <CRON_SECRET>`) a cada 10–15 min para lembretes, verificações do plano e
+reenvio de webhooks.

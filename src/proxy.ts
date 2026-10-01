@@ -9,4 +9,4 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/inicio/:path*", "/glicemia/:path*", "/refeicoes/:path*", "/medicamentos/:path*", "/insulina/:path*", "/compartilhar/:path*", "/familia/:path*", "/relatorios/:path*", "/admin/:path*", "/mais/:path*", "/metas/:path*", "/perfil/:path*", "/alertas/:path*", "/orientacoes/:path*", "/assistente/:path*", "/privacidade/:path*"] };
+export const config = { matcher: ["/inicio/:path*", "/glicemia/:path*", "/refeicoes/:path*", "/medicamentos/:path*", "/insulina/:path*", "/compartilhar/:path*", "/familia/:path*", "/relatorios/:path*", "/admin/:path*", "/mais/:path*", "/metas/:path*", "/perfil/:path*", "/alertas/:path*", "/orientacoes/:path*", "/acompanhamento/:path*", "/assistente/:path*", "/privacidade/:path*"] };

@@ -39,7 +39,11 @@ export async function requestGuardian(_: GuardianState, formData: FormData): Pro
   });
   const link = `${env.BETTER_AUTH_URL}/responsavel/${token}`;
   const mail = guardianEmail({ minorName: user.name, url: link, appUrl: env.BETTER_AUTH_URL });
-  const sent = await sendEmail(email.data, mail.subject, mail.html, mail.text);
+  const sent = await sendEmail(email.data, mail.subject, mail.html, mail.text, {
+    userId: user.id,
+    category: "responsavel",
+    reason: "Confirmação do responsável legal",
+  });
   // sem e-mail configurado, o link aparece na tela para o menor repassar ao responsável
   return { ok: true, link: sent ? undefined : link };
 }

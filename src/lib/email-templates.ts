@@ -211,6 +211,28 @@ export function guardianEmail(p: { minorName: string; url: string; appUrl: strin
   };
 }
 
+export function passwordChangedEmail(p: { name: string; appUrl: string }): EmailContent {
+  return {
+    subject: "Sua senha do Glicose Tech foi alterada",
+    html: shell({
+      preheader: "Aviso de segurança da conta.",
+      title: "Senha alterada",
+      intro: [
+        `Olá, ${esc(first(p.name))}. A senha da sua conta acaba de ser alterada.`,
+        "Se foi você, não precisa fazer nada. Se não reconhece essa alteração, redefina a senha agora e ative a verificação em duas etapas no Perfil.",
+      ],
+      button: { label: "Abrir o Glicose Tech", url: safeUrl(p.appUrl, p.appUrl) },
+      notes: ["Este é um aviso de segurança obrigatório e não pode ser desativado."],
+      appUrl: p.appUrl,
+    }),
+    text: plain([
+      `Olá, ${first(p.name)}. A senha da sua conta acaba de ser alterada.`,
+      "Se não foi você, redefina a senha agora e ative a verificação em duas etapas no Perfil.",
+      p.appUrl,
+    ]),
+  };
+}
+
 // ───────────────────────────── Alerta de glicemia ─────────────────────────────
 const SAFE_MESSAGE =
   "Este valor está fora da faixa configurada por você. Consulte seu plano de cuidados ou profissional de saúde se necessário.";
@@ -285,6 +307,43 @@ export function twoFactorCodeEmail(p: { name: string; code: string; appUrl: stri
 
 // ───────────────────────────── Lembrete para medir ─────────────────────────────
 // Sem nenhum dado de saúde: só o convite para registrar.
+
+const CONFERIR =
+  "Este é um aviso para você conferir a informação. A falta de registro não significa que você não mediu ou não tomou: pode ser só que ainda não foi anotado. Siga o plano recebido do seu profissional de saúde.";
+
+export function missedMeasureEmail(p: { appUrl: string; forFamily?: boolean }): EmailContent {
+  const url = p.forFamily ? `${p.appUrl}/familia` : `${p.appUrl}/glicemia/nova`;
+  const who = p.forFamily ? "da pessoa que você acompanha" : "da sua rotina";
+  return {
+    subject: "Aviso: medição prevista sem registro",
+    html: shell({
+      preheader: "Não encontramos o registro de uma medição prevista.",
+      title: "Medição prevista sem registro",
+      intro: [`Ainda não há registro de uma medição prevista ${who} no Glicose Tech.`, CONFERIR],
+      button: { label: p.forFamily ? "Abrir o acompanhamento" : "Registrar agora", url },
+      notes: [`Para mudar horários e avisos, abra <a href="${esc(p.appUrl)}/acompanhamento" style="color:${INK}">Configurações de acompanhamento</a>.`],
+      appUrl: p.appUrl,
+    }),
+    text: plain([`Ainda não há registro de uma medição prevista ${who}.`, CONFERIR, url]),
+  };
+}
+
+export function medUnconfirmedEmail(p: { appUrl: string }): EmailContent {
+  const url = `${p.appUrl}/medicamentos`;
+  return {
+    subject: "Aviso: medicamento sem confirmação",
+    html: shell({
+      preheader: "Há um horário de medicamento sem resposta.",
+      title: "Medicamento sem confirmação",
+      intro: ["Um horário de medicamento ou insulina que você cadastrou ainda está sem resposta (tomou ou não tomou).", CONFERIR],
+      button: { label: "Abrir medicamentos", url },
+      notes: [`Para mudar os avisos, abra <a href="${esc(p.appUrl)}/acompanhamento" style="color:${INK}">Configurações de acompanhamento</a>.`],
+      appUrl: p.appUrl,
+    }),
+    text: plain(["Um horário de medicamento ou insulina que você cadastrou está sem resposta.", CONFERIR, url]),
+  };
+}
+
 export function reminderEmail(p: { appUrl: string }): EmailContent {
   const url = `${p.appUrl}/glicemia/nova`;
   const manage = `${p.appUrl}/alertas`;
