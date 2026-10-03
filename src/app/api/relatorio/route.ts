@@ -6,6 +6,7 @@ import { resolveRange } from "@/lib/reports/range";
 import { pdfResponse } from "@/lib/reports/response";
 import { getAccessibleModules } from "@/lib/sharing/access";
 import { logAccess } from "@/lib/privacy/access-log";
+import { ALL_REPORT_SECTIONS, reportSections } from "@/lib/sharing/rules";
 
 export const runtime = "nodejs";
 
@@ -29,5 +30,7 @@ export async function GET(request: NextRequest) {
   );
   if (!range) return new Response("Período inválido", { status: 400 });
 
-  return pdfResponse(await getReportData(ownerId, range));
+  // acompanhante recebe só as seções dos módulos liberados (ex.: sem "Alimentação" não há refeições no PDF)
+  const sections = ownerId === session.user.id ? ALL_REPORT_SECTIONS : reportSections(modules);
+  return pdfResponse(await getReportData(ownerId, range, sections));
 }

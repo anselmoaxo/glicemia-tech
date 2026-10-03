@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { familyMembers, supportRequests, users } from "@/db/schema";
 import { logAdminAction, requireAdmin } from "@/lib/admin";
+import { sharingEvent } from "@/lib/sharing/audit";
 import { uuidSchema } from "@/lib/glucose/validation";
 
 export async function updateRequestStatus(formData: FormData) {
@@ -35,12 +36,16 @@ export async function revokeLink(formData: FormData) {
   const id = uuidSchema.safeParse(formData.get("id"));
   if (!id.success) return;
   const [target] = await db
-    .select({ email: users.email })
+    .select({ email: users.email, ownerId: familyMembers.ownerId, memberEmail: familyMembers.email })
     .from(familyMembers)
     .innerJoin(users, eq(users.id, familyMembers.ownerId))
     .where(eq(familyMembers.id, id.data));
   if (!target) return;
-  await db.update(familyMembers).set({ status: "revoked" }).where(eq(familyMembers.id, id.data));
+  await db.batch([
+    db.update(familyMembers).set({ status: "revoked", revokedAt: new Date() }).where(eq(familyMembers.id, id.data)),
+    // o titular vê no histórico do compartilhamento que a administração revogou (sem expor quem foi)
+    sharingEvent({ ownerId: target.ownerId, actorId: null, action: "admin_revoke", familyMemberId: id.data, memberEmail: target.memberEmail }),
+  ]);
   await logAdminAction(admin.id, "link_revoke", target.email);
   revalidatePath("/admin/solicitacoes");
 }

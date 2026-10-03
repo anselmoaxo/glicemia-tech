@@ -1,5 +1,6 @@
 import { AppNav } from "@/components/app-nav";
 import { AssistantWidget } from "@/components/assistant-widget";
+import { ConnectionStatus } from "@/components/connection-status";
 import { redirect } from "next/navigation";
 import { ageFromBirthDate } from "@/lib/profile-utils";
 import { getProfile } from "@/lib/profile";
@@ -21,6 +22,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </a>
       {/* escala de texto (rem) conforme preferência do usuário; inteiro 100–150 validado no banco */}
       <style>{`html{font-size:${profile.fontScale}%}`}</style>
+      <ConnectionStatus />
       <AppNav />
       <main id="conteudo" className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-28 md:pb-32">
         {children}

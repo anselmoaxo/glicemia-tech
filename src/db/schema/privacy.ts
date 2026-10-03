@@ -48,7 +48,7 @@ export const consentLogs = pgTable(
   },
   (t) => [
     index("consent_logs_user_idx").on(t.userId),
-    check("consent_logs_kind_chk", sql`${t.kind} in ('lgpd','guardian')`),
+    check("consent_logs_kind_chk", sql`${t.kind} in ('lgpd','guardian','majority_review')`),
   ],
 );
 

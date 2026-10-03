@@ -91,6 +91,8 @@ export function ReportDocument({ data }: { data: ReportData }) {
         {data.patientSummary !== "" && <Text style={s.muted}>{data.patientSummary}</Text>}
         <Text style={s.muted}>Período: {br(range.fromDate)} a {br(range.toDate)} ({range.days} dias)</Text>
 
+        {data.sections.glucose && (
+          <>
         <View style={s.cards}>
           {[
             ["Média (mg/dL)", show(stats.average)],
@@ -121,13 +123,22 @@ export function ReportDocument({ data }: { data: ReportData }) {
           ])}
         />
 
+          </>
+        )}
+
+        {data.sections.meals && (
+          <>
         <Text style={s.h2}>Refeições</Text>
         <Table
           cols={["Data/hora", "Refeição", "Descrição"]}
           widths={["20%", "20%", "60%"]}
           rows={data.meals.map((m) => [fmt(m.eatenAt, tz), mealLabel(m.mealType, m.customType), m.description])}
         />
+          </>
+        )}
 
+        {data.sections.medications && (
+          <>
         <Text style={s.h2}>Medicamentos</Text>
         <Table
           cols={["Horário previsto", "Medicamento", "Dose", "Resposta"]}
@@ -139,7 +150,11 @@ export function ReportDocument({ data }: { data: ReportData }) {
             m.status === "taken" ? "Tomou" : "Não tomou",
           ])}
         />
+          </>
+        )}
 
+        {data.sections.insulin && (
+          <>
         <Text style={s.h2}>Insulina</Text>
         <Table
           cols={["Data/hora", "Tipo", "Unidades", "Relação", "Local / obs."]}
@@ -152,8 +167,11 @@ export function ReportDocument({ data }: { data: ReportData }) {
             [siteLabel(l.site), l.notes].filter(Boolean).join(" · "),
           ])}
         />
+          </>
+        )}
 
         <Text style={s.note}>
+          {Object.values(data.sections).every(Boolean) ? "" : "Este relatório traz só os itens que o titular autorizou compartilhar. "}
           * Faixa conforme metas configuradas pelo próprio paciente no aplicativo. Este relatório organiza
           registros informados pelo usuário; não constitui diagnóstico, não sugere doses e não substitui
           avaliação médica.

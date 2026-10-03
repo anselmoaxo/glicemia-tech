@@ -17,9 +17,9 @@ export function PhotoForm({ userId, hasPhoto, version }: { userId: string; hasPh
         ) : (
           <div aria-hidden className="grid size-20 place-items-center rounded-full bg-secondary text-2xl text-muted-foreground">?</div>
         )}
-        <form onSubmit={onSubmit} className="flex flex-1 flex-col gap-2">
+        <form onSubmit={onSubmit} className="flex min-w-0 flex-1 flex-col gap-2">
           <Label htmlFor="photo" className="text-base">{hasPhoto ? "Substituir foto" : "Enviar foto"} (JPG, PNG ou WebP, até 512 KB)</Label>
-          <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required className="text-base" />
+          <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required className="w-full min-w-0 text-base" />
           <Button type="submit" disabled={pending} className="h-12 text-base">{pending ? "Enviando..." : "Salvar foto"}</Button>
         </form>
       </div>

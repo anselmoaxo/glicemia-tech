@@ -18,6 +18,8 @@ const readingColumns = {
   notes: glucoseReadings.notes,
   symptoms: glucoseReadings.symptoms,
   activity: glucoseReadings.activity,
+  // quando o registro chegou ao app (pode ser bem depois do horário da medição)
+  createdAt: glucoseReadings.createdAt,
 };
 
 export async function listReadings(userId: string, page: number) {

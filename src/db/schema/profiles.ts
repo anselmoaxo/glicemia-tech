@@ -26,6 +26,10 @@ export const profiles = pgTable(
     // Menor de idade: ciência de um responsável legal (registrada em consent_logs)
     guardianConsentAt: timestamp("guardian_consent_at"),
     lgpdConsentAt: timestamp("lgpd_consent_at"),
+    // Mostrar o valor da glicemia em e-mails de aviso (assunto/pré-visualização aparecem na tela bloqueada). Desligado por padrão.
+    notificationDetails: boolean("notification_details").notNull().default(false),
+    // Ao completar 18 anos, quando a própria pessoa revisou quem tem acesso aos dados dela
+    majorityReviewedAt: timestamp("majority_reviewed_at", { withTimezone: true }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

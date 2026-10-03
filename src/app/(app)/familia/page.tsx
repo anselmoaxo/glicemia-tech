@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { listSharedWithMe } from "@/lib/sharing/queries";
+import { ROLE_LABEL, type MemberRole } from "@/lib/sharing/rules";
 
 export const metadata: Metadata = { title: "Familiares" };
 
@@ -19,9 +20,12 @@ export default async function FamiliaPage() {
             <li key={o.ownerId}>
               <Link
                 href={`/familia/${o.ownerId}`}
-                className="flex min-h-14 items-center rounded-2xl border-2 bg-card px-4 text-lg font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+                className="flex min-h-14 items-center rounded-2xl py-2 border-2 bg-card px-4 text-lg font-semibold focus-visible:outline-2 focus-visible:outline-ring"
               >
-                {o.ownerName}
+                <span className="flex flex-col">
+                  {o.ownerName}
+                  <span className="text-sm font-normal text-muted-foreground">Você é: {ROLE_LABEL[o.role as MemberRole] ?? "Acompanhante"} · somente leitura</span>
+                </span>
               </Link>
             </li>
           ))}

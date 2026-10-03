@@ -27,4 +27,5 @@ export const ACTION_LABEL = {
   end_sessions: "Encerrou as sessões de",
   professional_verify: "Verificou o registro profissional de",
   professional_reject: "Recusou o registro profissional de",
+  setting_update: "Alterou a configuração",
 } as const;

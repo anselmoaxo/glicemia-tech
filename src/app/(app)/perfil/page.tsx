@@ -47,6 +47,7 @@ export default async function PerfilPage({ searchParams }: PageProps<"/perfil">)
         fontScale={profile.fontScale}
         alertEmailSelf={profile.alertEmailSelf}
         alertEmailFamily={profile.alertEmailFamily}
+        notificationDetails={profile.notificationDetails}
         trackingPurpose={profile.trackingPurpose}
       />
 

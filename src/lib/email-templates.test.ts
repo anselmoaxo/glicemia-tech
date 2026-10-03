@@ -7,8 +7,8 @@ const all = () => [
   verificationEmail({ name: "Maria da Silva", url: `${APP}/api/auth/verify-email?token=abc&callbackURL=%2Fx`, appUrl: APP }),
   resetPasswordEmail({ name: "Maria da Silva", url: `${APP}/reset?token=xyz`, appUrl: APP }),
   inviteEmail({ ownerName: "João", url: `${APP}/convite/t0k`, appUrl: APP, modules: ["Glicemia", "Insulina"] }),
-  alertEmail({ value: 212, direction: "high", appUrl: APP, link: `${APP}/glicemia` }),
-  alertEmail({ value: 54, direction: "low", appUrl: APP, ownerName: "João", link: `${APP}/familia/u1` }),
+  alertEmail({ value: 212, direction: "high", appUrl: APP, link: `${APP}/glicemia`, details: true }),
+  alertEmail({ value: 54, direction: "low", appUrl: APP, ownerName: "João", link: `${APP}/familia/u1`, details: true }),
   twoFactorCodeEmail({ name: "Maria", code: "123456", appUrl: APP }),
 ];
 
@@ -67,14 +67,15 @@ describe("conteúdo de cada e-mail", () => {
     expect(m.subject).toMatch(/fora da faixa/);
     expect(m.html).toContain(">212<");
     expect(m.html).toContain("Acima da faixa");
-    expect(m.html).toMatch(/Consulte seu plano de cuidados/);
-    expect(m.html).toMatch(/desligar no Perfil/);
+    expect(m.html).toMatch(/conferir a medição/);
+    expect(m.html).toMatch(/podem atrasar ou não chegar/);
+    expect(m.html).toMatch(/desligar ou mostrar menos detalhes no Perfil/);
     expect(m.text).toContain("212 mg/dL");
   });
 
   it("alerta para familiar: traz o nome de quem registrou e o link da pessoa", () => {
     const m = all()[4];
-    expect(m.subject).toBe("Alerta de glicemia de João");
+    expect(m.subject).toBe("Aviso de glicemia de João");
     expect(m.html).toContain("Abaixo da faixa");
     expect(m.html).toContain("/familia/u1");
     expect(m.html).not.toMatch(/Sua última medição/);
@@ -86,6 +87,20 @@ describe("conteúdo de cada e-mail", () => {
     expect(m.html).toContain("123456");
     expect(m.html).toMatch(/3 minutos/);
     expect(m.html).toMatch(/Nunca passe este código/);
+  });
+});
+
+describe("alertas discretos (padrão)", () => {
+  it.each([
+    alertEmail({ value: 212, direction: "high", appUrl: APP, link: `${APP}/glicemia` }),
+    alertEmail({ value: 54, direction: "low", appUrl: APP, ownerName: "João", link: `${APP}/familia/u1` }),
+  ])("sem valor, nome nem direção no assunto, na pré-visualização e no corpo", (m) => {
+    expect(m.subject).toBe("Novo aviso no Glicose Tech");
+    for (const part of [m.subject, m.html, m.text]) {
+      expect(part).not.toMatch(/212|54 mg|mg\/dL|João|acima|abaixo/i);
+    }
+    expect(m.html).toMatch(/Abra o app/);
+    expect(m.text).toMatch(/não use o Glicose Tech como único meio/);
   });
 });
 

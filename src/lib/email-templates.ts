@@ -235,10 +235,18 @@ export function passwordChangedEmail(p: { name: string; appUrl: string }): Email
 
 // ───────────────────────────── Alerta de glicemia ─────────────────────────────
 const SAFE_MESSAGE =
-  "Este valor está fora da faixa configurada por você. Consulte seu plano de cuidados ou profissional de saúde se necessário.";
+  "Aviso para conferir a medição e seguir a orientação recebida do seu profissional de saúde. A faixa foi configurada por você; o app não interpreta o valor nem recomenda doses ou conduta.";
 const SAFE_MESSAGE_FAMILY =
-  "Este valor está fora da faixa configurada pela própria pessoa. Em caso de dúvida, procure o plano de cuidados ou um profissional de saúde.";
+  "Aviso para conferir com a pessoa e seguir a orientação recebida do profissional de saúde dela. A faixa foi configurada pela própria pessoa (ou pelo responsável); o app não interpreta o valor nem recomenda doses ou conduta.";
+export const DELIVERY_NOTICE =
+  "Avisos por e-mail podem atrasar ou não chegar e dependem do registro manual no app: não use o Glicose Tech como único meio de vigilância ou de emergência. Em caso de sinais graves, procure atendimento de emergência (SAMU 192).";
+const WHY = "Você recebe este aviso porque os alertas por e-mail foram ativados. Dá para desligar ou mostrar menos detalhes no Perfil.";
 
+/**
+ * Aviso de medição fora da faixa. Por padrão (`details` falso) o assunto, a pré-visualização e o corpo NÃO trazem valor,
+ * nome nem direção: o assunto e a pré-visualização aparecem na tela bloqueada do celular. Com `details` (escolha do
+ * titular no Perfil) o e-mail mostra o valor.
+ */
 export function alertEmail(p: {
   value: number;
   direction: "low" | "high";
@@ -246,13 +254,35 @@ export function alertEmail(p: {
   /** vazio = alerta para a própria pessoa; preenchido = alerta para um familiar */
   ownerName?: string;
   link: string;
+  details?: boolean;
 }): EmailContent {
   const above = p.direction === "high";
   const where = above ? "acima" : "abaixo";
   const family = Boolean(p.ownerName);
   const url = safeUrl(p.link, p.appUrl);
   const color = above ? "#b4431a" : "#3342b8";
-  const subject = family ? `Alerta de glicemia de ${p.ownerName}` : "Sua glicemia ficou fora da faixa";
+  const button = { label: family ? "Ver os registros" : "Abrir o Glicose Tech", url };
+  const notes = [esc(family ? SAFE_MESSAGE_FAMILY : SAFE_MESSAGE), esc(DELIVERY_NOTICE), WHY];
+
+  if (!p.details) {
+    const lead = family
+      ? `Há um novo aviso de medição em um perfil que você acompanha. Abra o app para ver.`
+      : `Há um novo aviso sobre uma medição registrada por você. Abra o app para ver.`;
+    return {
+      subject: "Novo aviso no Glicose Tech",
+      html: shell({
+        preheader: "Abra o app para ver o aviso.",
+        title: "Novo aviso",
+        intro: [esc(lead)],
+        button,
+        notes,
+        appUrl: p.appUrl,
+      }),
+      text: plain([lead, `${button.label}: ${url}`, family ? SAFE_MESSAGE_FAMILY : SAFE_MESSAGE, DELIVERY_NOTICE, WHY]),
+    };
+  }
+
+  const subject = family ? `Aviso de glicemia de ${p.ownerName}` : "Sua glicemia ficou fora da faixa";
   const lead = family
     ? `<strong>${esc(p.ownerName!)}</strong> registrou uma medição ${where} da faixa configurada.`
     : `Sua última medição ficou <strong>${where} da faixa</strong> que você configurou.`;
@@ -261,21 +291,22 @@ export function alertEmail(p: {
     subject,
     html: shell({
       preheader: family ? `${p.ownerName} registrou ${p.value} mg/dL, ${where} da faixa.` : `Sua medição foi ${p.value} mg/dL, ${where} da faixa.`,
-      title: family ? "Alerta de glicemia" : "Glicemia fora da faixa",
+      title: family ? "Aviso de glicemia" : "Glicemia fora da faixa",
       intro: [lead],
       box: {
         tone: "alert",
         html: `<p style="margin:0;font-size:46px;line-height:1.1;font-weight:700;color:${color};font-family:${FONT}">${p.value}<span style="font-size:20px;font-weight:400"> mg/dL</span></p><p style="margin:6px 0 0;font-size:17px;font-weight:600;color:${color};font-family:${FONT}">${above ? "Acima da faixa" : "Abaixo da faixa"}</p>`,
       },
-      button: { label: family ? "Ver os registros" : "Abrir o Glicose Tech", url },
-      notes: [esc(family ? SAFE_MESSAGE_FAMILY : SAFE_MESSAGE), "Você recebe este aviso porque ativou os alertas por e-mail. Dá para desligar no Perfil."],
+      button,
+      notes,
       appUrl: p.appUrl,
     }),
     text: plain([
       family ? `${p.ownerName} registrou uma medição ${where} da faixa configurada: ${p.value} mg/dL.` : `Sua última medição ficou ${where} da faixa que você configurou: ${p.value} mg/dL.`,
       family ? SAFE_MESSAGE_FAMILY : SAFE_MESSAGE,
-      `${family ? "Ver os registros" : "Abrir o Glicose Tech"}: ${url}`,
-      "Você recebe este aviso porque ativou os alertas por e-mail. Dá para desligar no Perfil.",
+      `${button.label}: ${url}`,
+      DELIVERY_NOTICE,
+      WHY,
     ]),
   };
 }

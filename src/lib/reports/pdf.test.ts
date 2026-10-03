@@ -19,6 +19,7 @@ const data: ReportData = {
   meals: [{ mealType: "almoco", customType: null, eatenAt: new Date("2026-03-02T15:00:00Z"), description: "Arroz, feijão e salada" }],
   medications: [{ name: "Metformina", dose: "500", unit: "mg", scheduledFor: new Date("2026-03-02T11:00:00Z"), status: "taken" }],
   insulin: [{ units: "10.0", appliedAt: new Date("2026-03-02T10:30:00Z"), mealRelation: "antes_refeicao", site: "abdomen", notes: null, typeName: "NPH" }],
+  sections: { glucose: true, meals: true, medications: true, insulin: true },
 };
 
 describe("relatório em PDF", () => {
@@ -30,6 +31,11 @@ describe("relatório em PDF", () => {
   it("gera mesmo sem registros", async () => {
     const empty = { ...data, readings: [], meals: [], medications: [], insulin: [], stats: { count: 0, average: null, lowest: null, highest: null } };
     const buffer = await renderReportPdf(empty);
+    expect(buffer.subarray(0, 5).toString()).toBe("%PDF-");
+  });
+  it("gera só com as seções liberadas a um acompanhante", async () => {
+    const onlyGlucose = { ...data, meals: [], medications: [], insulin: [], sections: { glucose: true, meals: false, medications: false, insulin: false } };
+    const buffer = await renderReportPdf(onlyGlucose);
     expect(buffer.subarray(0, 5).toString()).toBe("%PDF-");
   });
 });

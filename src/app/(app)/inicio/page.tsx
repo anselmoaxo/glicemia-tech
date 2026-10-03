@@ -14,6 +14,7 @@ import { mealLabel } from "@/lib/meals/types";
 import { getTodayDoses } from "@/lib/medications/queries";
 import { getProfile } from "@/lib/profile";
 import { PlanNotice } from "@/components/plan-notice";
+import { ProfileNotices } from "@/components/profile-notices";
 import { requireUser } from "@/lib/session";
 import { getTrackingContext } from "@/lib/tracking/plan";
 
@@ -46,6 +47,7 @@ export default async function InicioPage({ searchParams }: PageProps<"/inicio">)
 
   return (
     <>
+    <ProfileNotices userId={user.id} />
     <PlanNotice userId={user.id} />
     <DashboardView
       firstName={user.name.split(" ")[0]}

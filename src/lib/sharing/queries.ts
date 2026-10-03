@@ -1,5 +1,6 @@
 import "server-only";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, notExists } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { hashToken } from "./tokens";
 import { familyMembers, sharingPermissions, users } from "@/db/schema";
@@ -20,18 +21,21 @@ export async function listFamilyMembers(ownerId: string) {
     id: m.id,
     email: m.email,
     status: m.status,
+    role: m.role,
+    acceptedAt: m.acceptedAt,
     inviteExpiresAt: m.inviteExpiresAt,
     modules: perms.filter((p) => p.familyMemberId === m.id).map((p) => p.module),
   }));
 }
 
-// Pessoas que compartilharam dados com o usuário.
+// Pessoas que compartilharam dados com o usuário (titular suspenso não aparece: o acesso está bloqueado).
 export async function listSharedWithMe(viewerId: string) {
   return db
-    .select({ ownerId: familyMembers.ownerId, ownerName: users.name })
+    .select({ ownerId: familyMembers.ownerId, ownerName: users.name, role: familyMembers.role })
     .from(familyMembers)
     .innerJoin(users, eq(users.id, familyMembers.ownerId))
-    .where(and(eq(familyMembers.memberUserId, viewerId), eq(familyMembers.status, "accepted")));
+    .where(and(eq(familyMembers.memberUserId, viewerId), eq(familyMembers.status, "accepted"), isNull(users.suspendedAt)))
+    .orderBy(users.name);
 }
 
 export async function getOwnerName(ownerId: string) {
@@ -39,7 +43,12 @@ export async function getOwnerName(ownerId: string) {
   return row?.name ?? "Usuário";
 }
 
-/** E-mails de familiares aceitos com acesso à glicemia (para alertas). */
+const owners = alias(users, "owners");
+
+/**
+ * E-mails de familiares aceitos com acesso à glicemia (para alertas). Conta de familiar suspensa não recebe, e titular
+ * suspenso não gera aviso para ninguém (o acesso dos familiares já fica bloqueado).
+ */
 export async function listGlucoseFamilyEmails(ownerId: string) {
   const rows = await db
     .select({ email: users.email })
@@ -51,6 +60,8 @@ export async function listGlucoseFamilyEmails(ownerId: string) {
         eq(familyMembers.ownerId, ownerId),
         eq(familyMembers.status, "accepted"),
         eq(sharingPermissions.module, "glucose"),
+        isNull(users.suspendedAt),
+        notExists(db.select({ id: owners.id }).from(owners).where(and(eq(owners.id, ownerId), isNotNull(owners.suspendedAt)))),
       ),
     );
   return rows.map((r) => r.email);

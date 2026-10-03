@@ -38,6 +38,14 @@ export default async function AlertasPage() {
           São avisos informativos. Eles não diagnosticam e não indicam o que fazer: em caso de dúvida, siga a orientação
           do seu profissional de saúde.
         </p>
+        <p role="note" className="flex max-w-prose gap-3 rounded-2xl bg-secondary p-4 text-base">
+          <Info aria-hidden className="mt-0.5 size-6 shrink-0 text-primary" />
+          <span>
+            Cada aviso é um lembrete para conferir a medição e seguir a orientação recebida. O app depende do registro manual e
+            da conexão: avisos e e-mails podem atrasar ou não chegar. Não use o app como único meio de vigilância ou de
+            emergência. Em caso de sinais graves, procure atendimento de emergência (SAMU 192).
+          </span>
+        </p>
       </div>
 
       <section aria-labelledby="lembretes" className="flex flex-col gap-4">
