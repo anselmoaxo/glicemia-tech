@@ -312,7 +312,7 @@ describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () =
     expect(await modulesOf(G, M)).toEqual([]);
   });
 
-  it("alertas por e-mail não vão para familiar com conta suspensa", async () => {
+  it("alertas por e-mail não vão para familiar suspenso nem saem de titular suspenso", async () => {
     const { listGlucoseFamilyEmails } = await import("@/lib/sharing/queries");
     expect(await listGlucoseFamilyEmails(A.id)).toEqual([C.email]);
     const { db } = await import("@/db");
@@ -321,6 +321,11 @@ describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () =
     await db.update(users).set({ suspendedAt: new Date() }).where(eq(users.id, C.id));
     expect(await listGlucoseFamilyEmails(A.id)).toEqual([]);
     await db.update(users).set({ suspendedAt: null }).where(eq(users.id, C.id));
+    // titular suspenso: nenhum familiar recebe aviso
+    await db.update(users).set({ suspendedAt: new Date() }).where(eq(users.id, A.id));
+    expect(await listGlucoseFamilyEmails(A.id)).toEqual([]);
+    await db.update(users).set({ suspendedAt: null }).where(eq(users.id, A.id));
+    expect(await listGlucoseFamilyEmails(A.id)).toEqual([C.email]);
   });
 
   it("perfil sem diabetes: esconde os controles sem apagar o histórico e pode voltar atrás", async () => {
