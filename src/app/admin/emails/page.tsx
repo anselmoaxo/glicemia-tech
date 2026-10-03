@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { EmailHistoryList } from "@/components/email-history-list";
 import { requireAdmin } from "@/lib/admin";
@@ -15,9 +16,10 @@ async function refresh(formData: FormData) {
   revalidatePath("/admin/emails");
 }
 
-export default async function AdminEmailsPage() {
+export default async function AdminEmailsPage({ searchParams }: PageProps<"/admin/emails">) {
   await requireAdmin();
-  const [rows, stats] = await Promise.all([listAllEmails(), emailStats()]);
+  const page = Math.max(1, Number.parseInt(String((await searchParams).pagina ?? "1"), 10) || 1);
+  const [{ items, hasMore }, stats] = await Promise.all([listAllEmails(page), emailStats()]);
   return (
     <section className="flex flex-col gap-4">
       <h1 className="text-xl font-bold">E-mails (visão técnica)</h1>
@@ -34,7 +36,11 @@ export default async function AdminEmailsPage() {
         ))}
         {stats.length === 0 && <li className="text-muted-foreground">Nenhum envio nos últimos 7 dias.</li>}
       </ul>
-      <EmailHistoryList rows={rows} refresh={refresh} />
+      <EmailHistoryList rows={items} refresh={refresh} />
+      <nav aria-label="Paginação" className="flex justify-between gap-3">
+        {page > 1 ? <Link href={`/admin/emails?pagina=${page - 1}`} className="flex min-h-12 items-center px-3 text-base underline underline-offset-4">← Anteriores</Link> : <span />}
+        {hasMore && <Link href={`/admin/emails?pagina=${page + 1}`} className="flex min-h-12 items-center px-3 text-base underline underline-offset-4">Próximos →</Link>}
+      </nav>
     </section>
   );
 }

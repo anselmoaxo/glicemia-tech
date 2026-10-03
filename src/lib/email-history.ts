@@ -24,8 +24,17 @@ export const listUserEmails = (userId: string, limit = 30) =>
   db.select(columns).from(emailLogs).where(eq(emailLogs.userId, userId)).orderBy(desc(emailLogs.requestedAt)).limit(limit);
 
 /** Visão técnica do administrador: todos os usuários, só metadados (destinatário mascarado). */
-export const listAllEmails = (limit = 50) =>
-  db.select({ ...columns, providerId: emailLogs.providerId }).from(emailLogs).orderBy(desc(emailLogs.requestedAt)).limit(limit);
+export const EMAILS_PAGE_SIZE = 30;
+
+export async function listAllEmails(page = 1) {
+  const rows = await db
+    .select({ ...columns, providerId: emailLogs.providerId })
+    .from(emailLogs)
+    .orderBy(desc(emailLogs.requestedAt))
+    .limit(EMAILS_PAGE_SIZE + 1)
+    .offset((page - 1) * EMAILS_PAGE_SIZE);
+  return { items: rows.slice(0, EMAILS_PAGE_SIZE), hasMore: rows.length > EMAILS_PAGE_SIZE };
+}
 
 export async function emailStats(days = 7) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);

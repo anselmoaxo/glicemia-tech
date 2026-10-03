@@ -1,6 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
+import { cache } from "react";
 import { db } from "@/db";
 import { adminAuditLogs, users } from "@/db/schema";
 import { parseAdminIds } from "@/lib/admin-ids";
@@ -27,9 +28,10 @@ export async function getRole(userId: string): Promise<Role> {
 /**
  * Exige administrador (proprietário ou administrador concedido) COM verificação em duas etapas. Quem não é recebe 404
  * (a área não revela que existe); admin sem 2FA vai ao Perfil para ativar. Chame em toda página e em toda server
- * action do /admin: o layout sozinho não basta.
+ * action do /admin: o layout sozinho não basta. Guardado em cache só durante a requisição: layout e página fazem uma
+ * única consulta.
  */
-export async function requireAdmin() {
+export const requireAdmin = cache(async () => {
   const session = await getSession();
   if (!session || session.user.suspendedAt) notFound();
   const [row] = await db
@@ -40,7 +42,7 @@ export async function requireAdmin() {
   if (role === "user") notFound();
   if (!row?.twoFactorEnabled) redirect("/perfil?exige2fa=1");
   return { ...session.user, role };
-}
+});
 
 /** Só o proprietário (ex.: gerenciar administradores). */
 export async function requireOwner() {
