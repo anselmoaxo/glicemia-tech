@@ -222,7 +222,6 @@ export const auth = betterAuth({
   },
 
   plugins: [
-    nextCookies(),
     // Verificação em duas etapas opcional: aplicativo autenticador (TOTP), códigos de recuperação e,
     // se o e-mail estiver configurado, código por e-mail. Erros seguidos bloqueiam a conta por 15 minutos.
     twoFactor({
@@ -258,5 +257,8 @@ export const auth = betterAuth({
           }),
         ]
       : []),
+    // Integração de cookies com o Next: precisa ser o último plugin, senão cookies gravados pelos plugins acima
+    // (ex.: a segunda etapa do login) podem não chegar ao navegador.
+    nextCookies(),
   ],
 });
