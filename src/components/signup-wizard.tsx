@@ -145,7 +145,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "", verifyEmail = fal
   if (sentTo) {
     return (
       <div className="flex flex-col gap-5" role="status">
-        <h2 className="text-3xl font-bold tracking-tight">Confirme seu e-mail</h2>
+        <h2 className="font-display text-4xl font-extrabold tracking-tight">Confirme seu e-mail</h2>
         <p className="text-lg">
           Enviamos um link para <strong className="break-all">{sentTo}</strong>. Abra sua caixa de entrada (veja também o
           spam) e clique no botão para ativar sua conta.
@@ -188,7 +188,7 @@ export function SignupWizard({ next = "/inicio", siteKey = "", verifyEmail = fal
             </li>
           ))}
         </ol>
-        <h2 ref={headingRef} tabIndex={-1} className="mt-5 text-3xl font-bold tracking-tight outline-none">
+        <h2 ref={headingRef} tabIndex={-1} className="mt-5 font-display text-4xl font-extrabold tracking-tight outline-none">
           {STEPS[step].title}
         </h2>
         <p className="mt-1 text-lg text-muted-foreground">{STEPS[step].hint}</p>

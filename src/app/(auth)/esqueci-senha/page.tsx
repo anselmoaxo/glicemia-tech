@@ -11,7 +11,7 @@ export default async function EsqueciSenhaPage() {
   await redirectIfSignedIn();
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-3xl font-bold tracking-tight">Esqueci minha senha</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">Esqueci minha senha</h1>
       {emailEnabled() ? (
         <ForgotPasswordForm siteKey={captchaEnabled() ? captchaSiteKey() : ""} />
       ) : (

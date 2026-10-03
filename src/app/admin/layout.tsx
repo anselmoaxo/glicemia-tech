@@ -8,15 +8,17 @@ export const metadata: Metadata = { title: { default: "Administração", templat
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   await requireAdmin();
   return (
-    <div className="flex min-h-dvh flex-1 flex-col md:flex-row">
+    <div className="flex min-h-dvh flex-1 flex-col bg-background md:flex-row">
       <a
         href="#conteudo"
         className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-background focus:p-3 focus:text-base focus:font-semibold"
       >
         Pular para o conteúdo
       </a>
-      <AdminNav />
-      <main id="conteudo" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-8 md:py-8">
+      <div className="bg-lcd md:shrink-0">
+        <AdminNav />
+      </div>
+      <main id="conteudo" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-10 md:py-10">
         {children}
       </main>
     </div>

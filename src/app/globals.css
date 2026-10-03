@@ -156,3 +156,22 @@
     }
   }
 }
+/* Traçado do visor (login/cadastro): desenha uma vez ao abrir a página. Sem animação para quem prefere menos movimento. */
+@keyframes trace-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes trace-dot-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.trace-line {
+  stroke-dasharray: 1;
+  animation: trace-draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) 0.2s both;
+}
+.trace-dot {
+  animation: trace-dot-in 0.3s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trace-line, .trace-dot { animation: none; }
+}

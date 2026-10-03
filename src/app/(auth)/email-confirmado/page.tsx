@@ -14,7 +14,7 @@ export default async function EmailConfirmadoPage({ searchParams }: PageProps<"/
   if (error) {
     return (
       <div className="flex flex-col gap-5">
-        <h1 className="text-3xl font-bold tracking-tight">Link inválido</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight">Link inválido</h1>
         <p role="alert" className="text-lg">
           Este link de confirmação é inválido ou já venceu. Entre com seu e-mail e senha: enviaremos um link novo para a sua
           caixa de entrada.
@@ -28,7 +28,7 @@ export default async function EmailConfirmadoPage({ searchParams }: PageProps<"/
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight text-ok">
+      <h1 className="flex items-center gap-2 font-display text-4xl font-extrabold tracking-tight text-ok">
         <Check aria-hidden className="size-8" /> E-mail confirmado
       </h1>
       <p className="text-lg">Tudo certo! Agora é só entrar com seu e-mail e senha.</p>

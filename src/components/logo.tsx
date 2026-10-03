@@ -1,6 +1,6 @@
 import { Droplet } from "lucide-react";
 
-export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
+export function Logo({ size = "md", tone = "dark" }: { size?: "md" | "lg"; tone?: "dark" | "light" }) {
   const big = size === "lg";
   return (
     <span className="flex items-center gap-2.5">
@@ -10,7 +10,7 @@ export function Logo({ size = "md" }: { size?: "md" | "lg" }) {
       >
         <Droplet className={big ? "size-7" : "size-5"} fill="currentColor" />
       </span>
-      <span className={`whitespace-nowrap font-bold tracking-tight ${big ? "text-3xl" : "text-xl"}`}>Glicose Tech</span>
+      <span className={`whitespace-nowrap font-display font-bold tracking-tight ${big ? "text-3xl" : "text-xl"} ${tone === "light" ? "text-white" : ""}`}>Glicose Tech</span>
     </span>
   );
 }

@@ -13,7 +13,7 @@ export default async function RedefinirSenhaPage({ searchParams }: PageProps<"/r
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-3xl font-bold tracking-tight">Criar nova senha</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">Criar nova senha</h1>
       {valid ? (
         <ResetPasswordForm token={token} />
       ) : (

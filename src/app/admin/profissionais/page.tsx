@@ -28,7 +28,8 @@ export default async function ProfissionaisPage() {
 
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold">Registros profissionais aguardando conferência</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">Profissionais</h1>
+      <p className="text-lg text-muted-foreground">Registros profissionais aguardando conferência.</p>
       <p className="text-base text-muted-foreground">
         Confira no portal oficial do conselho se o nome, a UF e o número existem, estão ativos e pertencem à pessoa. Só então
         marque a caixa e decida. A decisão fica na auditoria.

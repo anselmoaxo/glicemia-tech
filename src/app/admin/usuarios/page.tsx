@@ -13,6 +13,14 @@ const FILTERS: { key: UserFilter; label: string }[] = [
   { key: "pausados", label: "Pausados" },
 ];
 
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
+
 const badge = "rounded-full border px-2.5 py-0.5 text-sm font-semibold";
 
 export default async function AdminUsuariosPage({ searchParams }: PageProps<"/admin/usuarios">) {
@@ -28,7 +36,7 @@ export default async function AdminUsuariosPage({ searchParams }: PageProps<"/ad
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
-        <h1 className="text-3xl font-bold">Usuários</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight">Usuários</h1>
         <p className="text-base text-muted-foreground">{total} {total === 1 ? "conta" : "contas"}</p>
       </div>
 
@@ -61,9 +69,13 @@ export default async function AdminUsuariosPage({ searchParams }: PageProps<"/ad
             const protectedAccount = u.id === admin.id || role !== "user";
             return (
               <li key={u.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <Link href={`/admin/usuarios/${u.id}`} className="flex min-w-0 flex-col gap-1 hover:underline">
+                <Link href={`/admin/usuarios/${u.id}`} className="group flex min-w-0 items-start gap-3">
+                  <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-accent font-display text-base font-bold text-accent-foreground">
+                    {initials(u.name)}
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-1">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-lg font-semibold">{u.name}</span>
+                    <span className="text-lg font-semibold group-hover:underline">{u.name}</span>
                     {u.suspendedAt ? (
                       <span className={`${badge} border-high/30 bg-high-soft text-high`}>Pausado</span>
                     ) : (
@@ -75,6 +87,7 @@ export default async function AdminUsuariosPage({ searchParams }: PageProps<"/ad
                   </span>
                   <span className="break-all text-base text-muted-foreground">{u.email}</span>
                   <span className="text-sm text-muted-foreground">Cadastro {fmtDate(u.createdAt)} · último acesso {fmtDateTime(u.lastActive)}</span>
+                  </span>
                 </Link>
                 {!protectedAccount && (
                   <form action={u.suspendedAt ? unsuspendUser : suspendUser} className="shrink-0">
