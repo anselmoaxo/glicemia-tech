@@ -122,3 +122,13 @@ reenvio de webhooks.
 - **Deploy:** o script `vercel-build` aplica as migrações pendentes (`drizzle-kit migrate`) antes do `next build`. A Vercel usa esse
   script automaticamente, então um deploy nunca sobe código que depende de uma tabela ou coluna que ainda não existe. Se a migração
   falhar, o deploy falha e a versão anterior continua no ar. Para desligar, apague a linha `vercel-build` do `package.json`.
+
+## Compartilhamento, menores e alertas discretos (migração 0017)
+
+- **Migração** só aditiva: `family_members.role` e `revoked_at`, tabelas `sharing_events` e `app_settings` (limite de
+  acompanhantes = 2), `profiles.notification_details` e `majority_reviewed_at`. Responsáveis já confirmados são marcados
+  automaticamente. Aplicada no deploy pelo `vercel-build`.
+- **Admin > Configurações**: limite de pessoas com acesso a cada perfil (1 a 10).
+- Regras, riscos e pendências: [docs/regras-de-negocio.md](docs/regras-de-negocio.md).
+- **Testes com Postgres local** (sem Neon): crie um banco vazio, aplique as migrações e rode
+  `TEST_LOCAL_PG_URL=postgres://usuario@localhost:5432/banco_de_teste npm test`. Nunca use o banco de produção.

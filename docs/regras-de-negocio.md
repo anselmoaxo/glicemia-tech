@@ -76,7 +76,44 @@ LGPD: os itens que dependem de validação jurídica ou clínica estão marcados
 
 ## 5. Regras implementadas nesta versão
 
-Ver a seção "Entrega" do pull request e os testes em `src/lib/sharing/*.test.ts` e `src/test/sharing.integration.test.ts`.
+**Compartilhamento** (`src/lib/sharing/rules.ts` e `manage.ts`; toda permissão conferida no servidor, em cada ação)
+
+- Convite por e-mail, aceito só pela própria pessoa, logada, com o mesmo e-mail e (com e-mail ligado) e-mail confirmado.
+  Vale 7 dias, é de uso único, pode ser cancelado antes e o acesso revogado depois.
+- Limite de pessoas por perfil: padrão 2, ajustável em *Admin > Configurações* (`app_settings`). Convite expirado libera a vaga.
+  Acessos existentes acima do limite continuam.
+- *Alterar o que pode ver* muda os módulos sem derrubar o acesso. Reconvidar quem já tem acesso é recusado.
+- Histórico (`sharing_events`) de convite, aceite, mudança de permissão, cancelamento, revogação, confirmação do responsável,
+  revisão de maioridade e revogação pela administração. Guarda e-mail mascarado e módulos, nunca dado clínico.
+- Acompanhante só lê. Não convida, não altera, não revoga e não repassa acesso. O PDF dele traz só os módulos liberados.
+- Quem acompanha mais de um perfil troca entre eles por botões no topo, com "Você está vendo os dados de ..." em destaque.
+
+**Menores**
+
+- O vínculo guarda o papel (`companion` ou `guardian`). Familiar não vira responsável sem o fluxo de confirmação.
+- Menor não convida nem amplia permissões e não revoga o responsável; pode revogar acompanhantes.
+- O responsável administra quem acompanha o menor em */familia/[id]/compartilhamento* (só acompanhantes, não outro responsável).
+- Menor com responsável confirmado não muda a própria data de nascimento (só o suporte corrige).
+- Aviso 60 dias antes dos 18 anos (para o menor e para o responsável). Aos 18, o responsável perde a administração, mantém a
+  leitura até a pessoa decidir, e a pessoa revisa os acessos (registrado em `consent_logs` como `majority_review`).
+
+**Alertas e dados**
+
+- E-mail de alerta sem valor, nome nem direção por padrão (assunto "Novo aviso no Glicose Tech"); o titular pode ligar
+  "Mostrar o valor da glicemia no e-mail de aviso" no Perfil. Vale também para o e-mail ao familiar.
+- Textos de alerta: aviso para conferir a medição e seguir a orientação do profissional; avisos podem atrasar ou não chegar;
+  não usar como único meio de vigilância ou emergência; SAMU 192 para sinais graves.
+- Visão do acompanhante mostra quando foi medido e quando foi registrado no app, sinaliza registro com mais de 24 h como
+  "não é um valor atual" e lista os avisos dos últimos 7 dias. Aviso de "sem conexão" no app.
+- Familiar com conta suspensa não recebe alertas.
+
+**Sem diabetes e gratuidade**
+
+- O fluxo já existia; foram reforçados os textos (não confirma nem descarta diagnóstico, dá para mudar sem perder o histórico).
+- Gratuidade registrada em `src/lib/plan.ts` e visível em *Admin > Configurações*. Nenhuma cobrança foi adicionada.
+
+**Assistente**: revisado, sem mudanças. Já responde só sobre diabetes, glicose, medições e carboidratos, recusa dose e
+conduta, não recebe dados da pessoa nem de perfis compartilhados e não guarda conversa.
 
 ## 6. Pendências (dependem de decisão jurídica, clínica ou de produto)
 
