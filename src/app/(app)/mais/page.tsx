@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getRole } from "@/lib/admin";
 import { requireUser } from "@/lib/session";
+import { listSharedWithMe } from "@/lib/sharing/queries";
 import { getTrackingContext } from "@/lib/tracking/plan";
 
 export const metadata: Metadata = { title: "Mais" };
@@ -14,17 +15,20 @@ const items = [
   { href: "/alertas", label: "Alertas e lembretes" },
   { href: "/orientacoes", label: "Orientações para medir e ir à consulta" },
   { href: "/relatorios", label: "Relatórios e link para o médico" },
-  { href: "/compartilhar", label: "Compartilhar com familiar" },
-  { href: "/familia", label: "Acompanhando familiares" },
+  { href: "/compartilhar", label: "Quem vê meus dados" },
+  { href: "/familia", label: "Menores sob sua responsabilidade" },
   { href: "/perfil", label: "Meu perfil" },
   { href: "/privacidade", label: "Privacidade e meus dados" },
 ];
 
 export default async function MaisPage() {
   const user = await requireUser();
-  const { diabetesVisible } = await getTrackingContext(user.id);
+  const [{ diabetesVisible }, minors] = await Promise.all([getTrackingContext(user.id), listSharedWithMe(user.id)]);
   // "Não tenho diabetes" sem acompanhamento específico: sem insulina, metas de diabetes nem alertas
-  const base = diabetesVisible ? items : items.filter((i) => !["/insulina", "/alertas"].includes(i.href));
+  const hidden = diabetesVisible ? [] : ["/insulina", "/alertas"];
+  // só quem é responsável legal de algum menor vê a lista de menores
+  if (minors.length === 0) hidden.push("/familia");
+  const base = items.filter((i) => !hidden.includes(i.href));
   const list = (await getRole(user.id)) !== "user" ? [...base, { href: "/admin", label: "Administração" }] : base;
   return (
     <section className="flex flex-col gap-6">

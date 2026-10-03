@@ -4,7 +4,7 @@ export const EMAIL_CATEGORIES = {
   senha: { label: "Recuperação de senha", essential: true },
   seguranca: { label: "Aviso de segurança da conta", essential: true },
   duas_etapas: { label: "Código da verificação em duas etapas", essential: true },
-  convite: { label: "Convite para familiar ou acompanhante", essential: true },
+  convite: { label: "Convite para familiar (função retirada)", essential: true },
   responsavel: { label: "Confirmação do responsável legal", essential: true },
   alerta_medicao: { label: "Aviso de medição fora da faixa pessoal", essential: false },
   lembrete_medicao: { label: "Lembrete para medir", essential: false },

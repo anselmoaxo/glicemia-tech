@@ -7,7 +7,7 @@ import { WebhookForm } from "@/components/webhook-form";
 import { db } from "@/db";
 import { webhookIntegrations } from "@/db/schema";
 import { fmtDateTime } from "@/lib/admin-format";
-import { requireUser } from "@/lib/session";
+import { requireAdmin } from "@/lib/admin";
 import { listDeliveries } from "@/lib/webhooks/service";
 import { removeWebhook, retryWebhook } from "./actions";
 
@@ -21,8 +21,9 @@ const TYPE = {
 } as const;
 const STATUS = { pending: "Aguardando nova tentativa", delivered: "Entregue", failed: "Falhou" } as const;
 
+// Só administradores (com verificação em duas etapas); usuário comum recebe 404.
 export default async function N8nPage() {
-  const user = await requireUser();
+  const user = await requireAdmin();
   const [cfg] = await db.select().from(webhookIntegrations).where(eq(webhookIntegrations.userId, user.id));
   const deliveries = await listDeliveries(user.id);
 

@@ -154,37 +154,6 @@ export function resetPasswordEmail(p: { name: string; url: string; appUrl: strin
   };
 }
 
-// ───────────────────────────── Convite de familiar ─────────────────────────────
-export function inviteEmail(p: { ownerName: string; url: string; appUrl: string; modules: string[]; days?: number }): EmailContent {
-  const days = p.days ?? 7;
-  const url = safeUrl(p.url, p.appUrl);
-  const list = p.modules.join(", ");
-  return {
-    subject: `${p.ownerName} convidou você para acompanhar a glicemia`,
-    html: shell({
-      preheader: `${p.ownerName} quer compartilhar o acompanhamento com você.`,
-      title: "Você recebeu um convite",
-      intro: [
-        `<strong>${esc(p.ownerName)}</strong> convidou você para acompanhar os registros de saúde no Glicose Tech, <strong>somente para leitura</strong>.`,
-        p.modules.length ? `Você poderá ver: <strong>${esc(list)}</strong>.` : "",
-      ].filter(Boolean),
-      button: { label: "Aceitar o convite", url },
-      notes: [
-        `O convite vale por <strong>${days} dias</strong>.`,
-        "Para aceitar, entre ou crie uma conta usando <strong>este mesmo e-mail</strong>.",
-        "Você não consegue alterar nada nos registros. A pessoa pode encerrar o acesso quando quiser.",
-      ],
-      appUrl: p.appUrl,
-    }),
-    text: plain([
-      `${p.ownerName} convidou você para acompanhar os registros de saúde no Glicose Tech, somente para leitura.`,
-      p.modules.length ? `Você poderá ver: ${list}.` : "",
-      `Aceitar o convite: ${url}`,
-      `O convite vale por ${days} dias. Para aceitar, entre ou crie uma conta usando este mesmo e-mail.`,
-    ]),
-  };
-}
-
 export function guardianEmail(p: { minorName: string; url: string; appUrl: string }): EmailContent {
   const url = safeUrl(p.url, p.appUrl);
   return {

@@ -60,7 +60,7 @@ describe.skipIf(!url)("isolamento entre usuários", () => {
     expect(await getReading(a, readingId)).not.toBeNull();
   });
 
-  it("familiar só acessa depois de aceito e apenas os módulos liberados", async () => {
+  it("só o responsável legal aceito acessa; acompanhante (convite antigo) não lê nada", async () => {
     const { db } = await import("@/db");
     const { familyMembers, sharingPermissions } = await import("@/db/schema");
     const { eq } = await import("drizzle-orm");
@@ -70,6 +70,9 @@ describe.skipIf(!url)("isolamento entre usuários", () => {
     expect((await getAccessibleModules(b, a)).size).toBe(0); // convite ainda pendente
 
     await db.update(familyMembers).set({ status: "accepted" }).where(eq(familyMembers.id, memberId));
+    expect((await getAccessibleModules(b, a)).size).toBe(0); // acompanhante: função retirada
+
+    await db.update(familyMembers).set({ role: "guardian" }).where(eq(familyMembers.id, memberId));
     const modules = await getAccessibleModules(b, a);
     expect(modules.has("glucose")).toBe(true);
     expect(modules.has("insulin")).toBe(false);

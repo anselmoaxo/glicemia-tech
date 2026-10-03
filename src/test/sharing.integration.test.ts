@@ -47,16 +47,15 @@ const mk = (key: string, verified = true): TestUser => ({
   emailVerified: verified,
   suspendedAt: null,
 });
-// A = adulto titular; C, E, F = convidados; D = estranho; M = menor; G = responsável de M; H = acompanhante de M
+// A = adulto titular; C = acompanhante antigo de A (convite de antes da retirada); D = estranho;
+// M = menor; G = responsável de M; H = outra pessoa que tenta virar responsável
 const A = mk("a");
 const C = mk("c");
 const D = mk("d");
-const E = mk("e");
-const F = mk("f");
 const M = mk("m");
 const G = mk("g");
 const H = mk("h");
-const ALL = [A, C, D, E, F, M, G, H];
+const ALL = [A, C, D, M, G, H];
 
 const as = (u: TestUser) => {
   session.user = u;
@@ -69,7 +68,6 @@ const form = (entries: Record<string, string | string[]>) => {
 const expectRedirect = async (p: Promise<unknown>, to: RegExp) => {
   await expect(p).rejects.toThrow(to);
 };
-const tokenOf = (link?: string) => link!.split("/convite/")[1];
 
 async function memberOf(ownerId: string, email: string) {
   const { db } = await import("@/db");
@@ -86,21 +84,12 @@ async function modulesOf(viewer: TestUser, owner: TestUser) {
   const { getAccessibleModules } = await import("@/lib/sharing/access");
   return [...(await getAccessibleModules(viewer.id, owner.id))].sort();
 }
-async function invite(actor: TestUser, owner: TestUser, email: string, modules: string[]) {
-  const { inviteFamily } = await import("@/app/(app)/compartilhar/actions");
-  as(actor);
-  return inviteFamily(owner.id, {}, form({ email, modules }));
-}
-async function accept(user: TestUser, token: string) {
-  const { acceptInvite } = await import("@/app/convite/[token]/actions");
-  as(user);
-  return acceptInvite(token);
-}
 
-describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () => {
+describe.skipIf(!enabled)("compartilhamento: só o responsável legal de menores, com banco", () => {
   beforeAll(async () => {
     const { db } = await import("@/db");
-    const { users, profiles, glucoseReadings, meals, appSettings } = await import("@/db/schema");
+    const { users, profiles, glucoseReadings, familyMembers, sharingPermissions } = await import("@/db/schema");
+    const { hashToken } = await import("@/lib/sharing/tokens");
     await db.insert(users).values(ALL.map(({ id, name, email, emailVerified }) => ({ id, name, email, emailVerified })));
     await db.insert(profiles).values([
       { userId: A.id, birthDate: "1980-01-01" },
@@ -108,116 +97,41 @@ describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () =
       { userId: G.id, birthDate: "1982-01-01" },
     ]);
     await db.insert(glucoseReadings).values({ userId: A.id, valueMgDl: 130, measuredAt: new Date(), contextKey: "jejum" });
-    await db.insert(meals).values({ userId: A.id, mealType: "almoco", eatenAt: new Date(), description: "Arroz e feijão" });
-    // limite padrão (2) para o teste não depender do valor deixado por outra execução
-    await db.insert(appSettings).values({ key: "max_companions", value: 2 }).onConflictDoUpdate({ target: appSettings.key, set: { value: 2 } });
+    // vínculo de acompanhante criado antes da retirada do convite (aceito, com glicemia liberada)
+    const id = crypto.randomUUID();
+    await db.insert(familyMembers).values({
+      id,
+      ownerId: A.id,
+      email: C.email,
+      memberUserId: C.id,
+      status: "accepted",
+      role: "companion",
+      acceptedAt: new Date(),
+      tokenHash: hashToken(`legado-${stamp}`),
+      inviteExpiresAt: new Date(),
+    });
+    await db.insert(sharingPermissions).values([{ familyMemberId: id, module: "glucose" }, { familyMemberId: id, module: "reports" }]);
   });
 
   afterAll(async () => {
     const { db } = await import("@/db");
-    const { users, appSettings } = await import("@/db/schema");
-    const { eq, inArray } = await import("drizzle-orm");
+    const { users } = await import("@/db/schema");
+    const { inArray } = await import("drizzle-orm");
     await db.delete(users).where(inArray(users.id, ALL.map((u) => u.id))); // cascade limpa o resto
-    await db.update(appSettings).set({ value: 2 }).where(eq(appSettings.key, "max_companions"));
   });
 
-  it("convite fica pendente e não dá acesso até ser aceito pelo próprio convidado", async () => {
-    const r = await invite(A, A, C.email, ["glucose", "reports"]);
-    expect(r.ok).toBe(true);
-    expect(r.link).toMatch(/\/convite\//); // sem e-mail configurado o link aparece só para quem convidou
-    expect((await memberOf(A.id, C.email)).status).toBe("pending");
+  it("acompanhante antigo não lê nada, não aparece como acompanhado e não recebe alertas", async () => {
     expect(await modulesOf(C, A)).toEqual([]);
-
-    // conhecer o link não basta: outra conta (e-mail diferente) não aceita
-    await expectRedirect(accept(D, tokenOf(r.link)), /erro=1/);
-    expect((await memberOf(A.id, C.email)).status).toBe("pending");
-
-    await expectRedirect(accept(C, tokenOf(r.link)), new RegExp(`/familia/${A.id}`));
-    expect((await memberOf(A.id, C.email)).status).toBe("accepted");
-    expect(await modulesOf(C, A)).toEqual(["glucose", "reports"]);
-    expect(await events(A.id)).toEqual(expect.arrayContaining(["invite", "accept"]));
-
-    // convite é de uso único
-    await expectRedirect(accept(C, tokenOf(r.link)), /erro=1/);
-  });
-
-  it("com envio de e-mail ligado, o aceite exige o e-mail confirmado", async () => {
-    const unverified = { ...E, emailVerified: false };
-    const r = await invite(A, A, E.email, ["glucose"]);
-    process.env.RESEND_API_KEY = "re_teste";
-    try {
-      await expectRedirect(accept(unverified, tokenOf(r.link)), /erro=1/);
-      await expectRedirect(accept(E, tokenOf(r.link)), /familia/);
-    } finally {
-      delete process.env.RESEND_API_KEY;
-    }
-    expect(await modulesOf(E, A)).toEqual(["glucose"]);
-  });
-
-  it("reconvidar quem já tem acesso não derruba o acesso; mudar permissões não exige novo convite", async () => {
-    const again = await invite(A, A, C.email, ["meals"]);
-    expect(again.error).toMatch(/já tem acesso/);
-    expect((await memberOf(A.id, C.email)).status).toBe("accepted");
-
-    const { updatePermissions } = await import("@/app/(app)/compartilhar/actions");
-    as(A);
-    const member = await memberOf(A.id, C.email);
-    expect(await updatePermissions(A.id, {}, form({ id: member.id, modules: ["glucose", "meals", "reports"] }))).toEqual({ ok: true });
-    expect(await modulesOf(C, A)).toEqual(["glucose", "meals", "reports"]);
-    expect((await memberOf(A.id, C.email)).status).toBe("accepted");
-    expect(await events(A.id)).toContain("permissions_change");
-  });
-
-  it("limite configurável: padrão 2; o administrador amplia sem mudar o código; convite expirado libera a vaga", async () => {
-    // A já tem C e E (2 de 2)
-    const blocked = await invite(A, A, F.email, ["glucose"]);
-    expect(blocked.error).toMatch(/Limite de 2/);
-
-    const { setMaxCompanions } = await import("@/lib/settings");
-    await setMaxCompanions(3, A.id);
-    const ok = await invite(A, A, F.email, ["glucose"]);
-    expect(ok.ok).toBe(true);
-
-    // convite expirado não pode ser aceito e não ocupa vaga
-    const { db } = await import("@/db");
-    const { familyMembers } = await import("@/db/schema");
-    const { eq } = await import("drizzle-orm");
-    const f = await memberOf(A.id, F.email);
-    await db.update(familyMembers).set({ inviteExpiresAt: new Date(Date.now() - 1000) }).where(eq(familyMembers.id, f.id));
-    await expectRedirect(accept(F, tokenOf(ok.link)), /erro=1/);
-    await setMaxCompanions(2, A.id);
-    const { occupiesSlot } = await import("@/lib/sharing/rules");
-    const { listFamilyMembers } = await import("@/lib/sharing/queries");
-    expect((await listFamilyMembers(A.id)).filter((m) => occupiesSlot(m))).toHaveLength(2);
-  });
-
-  it("cancelar convite pendente e revogar acesso ativo, com histórico", async () => {
-    const { revokeFamilyMember } = await import("@/app/(app)/compartilhar/actions");
-    const f = await memberOf(A.id, F.email);
-    as(A);
-    await revokeFamilyMember(A.id, form({ id: f.id }));
-    expect((await memberOf(A.id, F.email)).status).toBe("revoked");
-
-    const e = await memberOf(A.id, E.email);
-    await revokeFamilyMember(A.id, form({ id: e.id }));
-    expect(await modulesOf(E, A)).toEqual([]);
-    expect((await memberOf(A.id, E.email)).revokedAt).not.toBeNull();
-    expect(await events(A.id)).toEqual(expect.arrayContaining(["invite_cancel", "revoke"]));
-  });
-
-  it("acompanhante não administra o compartilhamento, não repassa acesso e não edita registros", async () => {
-    const { createInvite, getSharingContext, revokeMember, updateMemberModules } = await import("@/lib/sharing/manage");
-    const c = await memberOf(A.id, C.email);
+    const { listGlucoseFamilyEmails, listSharedWithMe } = await import("@/lib/sharing/queries");
+    expect(await listSharedWithMe(C.id)).toEqual([]);
+    expect(await listGlucoseFamilyEmails(A.id)).toEqual([]);
+    const { getSharingContext } = await import("@/lib/sharing/manage");
     expect(await getSharingContext(C.id, A.id)).toBeNull();
-    expect((await createInvite(C, A.id, { email: D.email, modules: ["glucose"] })).ok).toBe(false);
-    expect((await updateMemberModules(C.id, A.id, c.id, ["glucose", "insulin"])).ok).toBe(false);
-    expect((await revokeMember(C.id, A.id, c.id)).ok).toBe(false);
-    expect(await modulesOf(C, A)).toEqual(["glucose", "meals", "reports"]);
-
-    // estranho que conhece o id do titular não lê nada
+    // estranho que conhece o id do titular também não lê nada
     expect(await modulesOf(D, A)).toEqual([]);
+  });
 
-    // ações de registro sempre usam o usuário da sessão: o acompanhante não apaga a medição do titular
+  it("ações de registro sempre usam o usuário da sessão: outra conta não apaga a medição do titular", async () => {
     const { db } = await import("@/db");
     const { glucoseReadings } = await import("@/db/schema");
     const { eq } = await import("drizzle-orm");
@@ -228,25 +142,7 @@ describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () =
     expect(await db.select().from(glucoseReadings).where(eq(glucoseReadings.id, reading.id))).toHaveLength(1);
   });
 
-  it("relatório do acompanhante traz só os módulos liberados", async () => {
-    const { getReportData } = await import("@/lib/reports/data");
-    const { buildRange } = await import("@/lib/reports/range");
-    const { reportSections } = await import("@/lib/sharing/rules");
-    const { getAccessibleModules } = await import("@/lib/sharing/access");
-    const range = buildRange("2000-01-01", "2100-01-01", "America/Sao_Paulo");
-
-    const { updatePermissions } = await import("@/app/(app)/compartilhar/actions");
-    as(A);
-    await updatePermissions(A.id, {}, form({ id: (await memberOf(A.id, C.email)).id, modules: ["glucose", "reports"] }));
-    const forC = await getReportData(A.id, range, reportSections(await getAccessibleModules(C.id, A.id)));
-    expect(forC.readings).toHaveLength(1);
-    expect(forC.meals).toHaveLength(0);
-
-    const forOwner = await getReportData(A.id, range);
-    expect(forOwner.meals).toHaveLength(1);
-  });
-
-  it("menor: responsável confirma, administra o compartilhamento e o plano; o menor não amplia sozinho", async () => {
+  it("menor: responsável confirma, vê tudo, configura o plano e recebe alertas; o menor não o revoga", async () => {
     const { db } = await import("@/db");
     const { guardianRequests } = await import("@/db/schema");
     const { generateToken } = await import("@/lib/sharing/tokens");
@@ -254,7 +150,7 @@ describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () =
     const { token, hash } = generateToken();
     await db.insert(guardianRequests).values({ minorId: M.id, guardianEmail: G.email, tokenHash: hash, expiresAt: new Date(Date.now() + 86_400_000) });
 
-    // um familiar qualquer (outro e-mail) não vira responsável
+    // outra pessoa (outro e-mail) não vira responsável
     as(H);
     await expectRedirect(confirmGuardian(token, form({ declaro: "on" })), /erro=1/);
     as(G);
@@ -262,27 +158,34 @@ describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () =
     const g = await memberOf(M.id, G.email);
     expect([g.status, g.role]).toEqual(["accepted", "guardian"]);
     expect(await events(M.id)).toContain("guardian_confirm");
+    expect(await modulesOf(G, M)).toEqual(["glucose", "insulin", "meals", "medications", "reports"]);
+    expect(await modulesOf(H, M)).toEqual([]);
 
-    // o menor não convida
-    const byMinor = await invite(M, M, H.email, ["glucose"]);
-    expect(byMinor.error).toMatch(/responsável legal/);
-
-    // o responsável convida um acompanhante para o menor
-    const byGuardian = await invite(G, M, H.email, ["glucose"]);
-    expect(byGuardian.ok).toBe(true);
-    await expectRedirect(accept(H, tokenOf(byGuardian.link)), /familia/);
-    expect(await modulesOf(H, M)).toEqual(["glucose"]);
+    const { listGlucoseFamilyEmails, listSharedWithMe } = await import("@/lib/sharing/queries");
+    expect((await listSharedWithMe(G.id)).map((o) => o.ownerId)).toEqual([M.id]);
+    expect(await listGlucoseFamilyEmails(M.id)).toEqual([G.email]);
 
     const { canManagePlan } = await import("@/lib/tracking/plan");
     expect(await canManagePlan(G.id, M.id)).toBe(true);
-    expect(await canManagePlan(H.id, M.id)).toBe(false); // acompanhante não é responsável
+    expect(await canManagePlan(H.id, M.id)).toBe(false);
 
-    // o menor revoga o acompanhante, mas não o responsável
     const { revokeMember } = await import("@/lib/sharing/manage");
     expect((await revokeMember(M.id, M.id, g.id)).ok).toBe(false);
     expect((await revokeMember(G.id, M.id, g.id)).ok).toBe(false);
-    expect((await revokeMember(M.id, M.id, (await memberOf(M.id, H.email)).id)).ok).toBe(true);
-    expect(await modulesOf(H, M)).toEqual([]);
+  });
+
+  it("alertas por e-mail não vão para responsável suspenso nem saem de titular suspenso", async () => {
+    const { listGlucoseFamilyEmails } = await import("@/lib/sharing/queries");
+    const { db } = await import("@/db");
+    const { users } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    await db.update(users).set({ suspendedAt: new Date() }).where(eq(users.id, G.id));
+    expect(await listGlucoseFamilyEmails(M.id)).toEqual([]);
+    await db.update(users).set({ suspendedAt: null }).where(eq(users.id, G.id));
+    await db.update(users).set({ suspendedAt: new Date() }).where(eq(users.id, M.id));
+    expect(await listGlucoseFamilyEmails(M.id)).toEqual([]);
+    await db.update(users).set({ suspendedAt: null }).where(eq(users.id, M.id));
+    expect(await listGlucoseFamilyEmails(M.id)).toEqual([G.email]);
   });
 
   it("menor com responsável não muda a própria data de nascimento para virar adulto", async () => {
@@ -310,22 +213,6 @@ describe.skipIf(!enabled)("compartilhamento: regras de negócio com banco", () =
     expect(await events(M.id)).toContain("majority_review");
     expect((await revokeMember(M.id, M.id, (await memberOf(M.id, G.email)).id)).ok).toBe(true);
     expect(await modulesOf(G, M)).toEqual([]);
-  });
-
-  it("alertas por e-mail não vão para familiar suspenso nem saem de titular suspenso", async () => {
-    const { listGlucoseFamilyEmails } = await import("@/lib/sharing/queries");
-    expect(await listGlucoseFamilyEmails(A.id)).toEqual([C.email]);
-    const { db } = await import("@/db");
-    const { users } = await import("@/db/schema");
-    const { eq } = await import("drizzle-orm");
-    await db.update(users).set({ suspendedAt: new Date() }).where(eq(users.id, C.id));
-    expect(await listGlucoseFamilyEmails(A.id)).toEqual([]);
-    await db.update(users).set({ suspendedAt: null }).where(eq(users.id, C.id));
-    // titular suspenso: nenhum familiar recebe aviso
-    await db.update(users).set({ suspendedAt: new Date() }).where(eq(users.id, A.id));
-    expect(await listGlucoseFamilyEmails(A.id)).toEqual([]);
-    await db.update(users).set({ suspendedAt: null }).where(eq(users.id, A.id));
-    expect(await listGlucoseFamilyEmails(A.id)).toEqual([C.email]);
   });
 
   it("perfil sem diabetes: esconde os controles sem apagar o histórico e pode voltar atrás", async () => {

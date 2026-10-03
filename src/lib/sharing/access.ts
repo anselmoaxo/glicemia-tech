@@ -21,6 +21,7 @@ export async function getAccessibleModules(viewerId: string, ownerId: string): P
         eq(familyMembers.ownerId, ownerId),
         eq(familyMembers.memberUserId, viewerId),
         eq(familyMembers.status, "accepted"),
+        eq(familyMembers.role, "guardian"), // só o responsável legal; o convite de acompanhante foi retirado
       ),
     );
   return new Set(rows.map((r) => r.module as ShareModule));

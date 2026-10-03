@@ -30,7 +30,7 @@ export function PhotoForm({ userId, hasPhoto, version }: { userId: string; hasPh
       ) : null}
       {state.error && <p role="alert" className="text-base font-medium text-destructive">{state.error}</p>}
       {state.ok && <p role="status" className="text-base font-medium">Foto salva.</p>}
-      <p className="text-sm text-muted-foreground">A foto só aparece para você e para familiares que você autorizou.</p>
+      <p className="text-sm text-muted-foreground">A foto só aparece para você (e para o seu responsável legal, em contas de menores de 18 anos).</p>
     </section>
   );
 }

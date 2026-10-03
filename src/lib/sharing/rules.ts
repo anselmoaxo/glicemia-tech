@@ -2,31 +2,8 @@
 import { ageFromBirthDate } from "@/lib/profile-utils";
 import type { ShareModule } from "./modules";
 
-/** Limite inicial de acompanhantes (inclui responsáveis) por perfil; o administrador ajusta em Admin > Configurações. */
-export const DEFAULT_MAX_COMPANIONS = 2;
-export const MAX_COMPANIONS_CEILING = 10;
-
-export const INVITE_DAYS = 7;
-
-/** Valor guardado em app_settings -> limite válido (1 a 10). Qualquer coisa estranha volta ao padrão. */
-export function normalizeMaxCompanions(value: unknown): number {
-  const n = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
-  if (!Number.isInteger(n) || n < 1 || n > MAX_COMPANIONS_CEILING) return DEFAULT_MAX_COMPANIONS;
-  return n;
-}
-
 export type MemberRole = "companion" | "guardian";
 export type MemberStatus = "pending" | "accepted" | "revoked";
-
-/** Vínculos que ocupam vaga: acessos ativos e convites pendentes ainda válidos (convite expirado libera a vaga). */
-export function occupiesSlot(m: { status: string; inviteExpiresAt: Date }, now = new Date()) {
-  return m.status === "accepted" || (m.status === "pending" && m.inviteExpiresAt.getTime() > now.getTime());
-}
-
-/** Convite pendente que já passou da validade (não pode mais ser aceito). */
-export function inviteExpired(m: { status: string; inviteExpiresAt: Date }, now = new Date()) {
-  return m.status === "pending" && m.inviteExpiresAt.getTime() <= now.getTime();
-}
 
 /**
  * Quem está agindo sobre o compartilhamento de um perfil:

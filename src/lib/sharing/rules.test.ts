@@ -1,42 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
-  DEFAULT_MAX_COMPANIONS,
-  inviteExpired,
   isMinor,
   isStale,
   majorityStatus,
-  normalizeMaxCompanions,
-  occupiesSlot,
   registeredLater,
   reportSections,
   sharingAuthority,
 } from "./rules";
 
 const now = new Date("2026-10-03T12:00:00");
-const future = new Date("2026-10-05T12:00:00");
-const past = new Date("2026-10-01T12:00:00");
-
-describe("limite de acompanhantes", () => {
-  it("padrão é 2 e valores inválidos voltam ao padrão", () => {
-    expect(DEFAULT_MAX_COMPANIONS).toBe(2);
-    expect(normalizeMaxCompanions(undefined)).toBe(2);
-    expect(normalizeMaxCompanions(0)).toBe(2);
-    expect(normalizeMaxCompanions(11)).toBe(2);
-    expect(normalizeMaxCompanions(2.5)).toBe(2);
-    expect(normalizeMaxCompanions("abc")).toBe(2);
-    expect(normalizeMaxCompanions(3)).toBe(3);
-    expect(normalizeMaxCompanions("4")).toBe(4);
-  });
-
-  it("acesso ativo e convite válido ocupam vaga; convite expirado e revogado não", () => {
-    expect(occupiesSlot({ status: "accepted", inviteExpiresAt: past }, now)).toBe(true);
-    expect(occupiesSlot({ status: "pending", inviteExpiresAt: future }, now)).toBe(true);
-    expect(occupiesSlot({ status: "pending", inviteExpiresAt: past }, now)).toBe(false);
-    expect(occupiesSlot({ status: "revoked", inviteExpiresAt: future }, now)).toBe(false);
-    expect(inviteExpired({ status: "pending", inviteExpiresAt: past }, now)).toBe(true);
-    expect(inviteExpired({ status: "accepted", inviteExpiresAt: past }, now)).toBe(false);
-  });
-});
 
 describe("quem administra o compartilhamento", () => {
   it("adulto controla tudo, inclusive revogar o antigo responsável", () => {

@@ -1,11 +1,11 @@
-import { HeartHandshake, NotebookPen, ShieldCheck } from "lucide-react";
+import { FileText, NotebookPen, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { GlucoseTrace, TRACE_LAST_VALUE } from "@/components/glucose-trace";
 import { Logo } from "@/components/logo";
 
 const facts = [
   { icon: NotebookPen, text: "Glicemia, refeições, remédios e insulina num lugar só." },
-  { icon: HeartHandshake, text: "Familiares acompanham só o que você liberar, sem poder alterar." },
+  { icon: FileText, text: "Relatório e link temporário para levar ao médico." },
   { icon: ShieldCheck, text: "Seus dados de saúde não aparecem para a administração do app." },
 ];
 

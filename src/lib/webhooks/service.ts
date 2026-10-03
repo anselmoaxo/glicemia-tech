@@ -5,6 +5,7 @@ import { request } from "node:https";
 import { randomUUID } from "node:crypto";
 import { db } from "@/db";
 import { profiles, trackingPlans, webhookDeliveries, webhookIntegrations } from "@/db/schema";
+import { getRole } from "@/lib/admin";
 import { decrypt, opaqueProfileId } from "@/lib/crypto";
 import { diabetesControlsVisible } from "@/lib/tracking/visibility";
 import { backoffMs, buildPayload, MAX_ATTEMPTS, signPayload, type WebhookType } from "./sign";
@@ -68,6 +69,8 @@ export async function emitWebhook(userId: string, type: Exclude<WebhookType, "te
   try {
     const cfg = await getConfig(userId);
     if (!cfg || !cfg.enabled || !cfg.consentAt || !cfg.urlEnc || !cfg.secretEnc || !cfg[FLAG[type]]) return;
+    // integração restrita a administradores: configuração antiga de usuário comum não envia nada
+    if ((await getRole(userId)) === "user") return;
     if (cfg.scope === "diabetes_only") {
       const [[profile], [plan]] = await Promise.all([
         db.select({ purpose: profiles.trackingPurpose }).from(profiles).where(eq(profiles.userId, userId)),

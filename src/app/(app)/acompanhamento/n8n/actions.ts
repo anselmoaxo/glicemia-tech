@@ -8,7 +8,7 @@ import { db } from "@/db";
 import { webhookDeliveries, webhookIntegrations } from "@/db/schema";
 import { encrypt } from "@/lib/crypto";
 import { uuidSchema } from "@/lib/glucose/validation";
-import { requireUser } from "@/lib/session";
+import { requireAdmin } from "@/lib/admin";
 import { retryDelivery, sendTest } from "@/lib/webhooks/service";
 import { isPrivateIp, validateWebhookUrl } from "@/lib/webhooks/url";
 
@@ -34,7 +34,7 @@ async function checkPublic(url: URL): Promise<string | null> {
 }
 
 export async function saveWebhook(_: WebhookState, formData: FormData): Promise<WebhookState> {
-  const user = await requireUser();
+  const user = await requireAdmin(); // integração restrita a administradores
   const [current] = await db.select().from(webhookIntegrations).where(eq(webhookIntegrations.userId, user.id));
 
   const rawUrl = String(formData.get("url") ?? "").trim();
@@ -78,7 +78,7 @@ export async function saveWebhook(_: WebhookState, formData: FormData): Promise<
 }
 
 export async function testWebhook(): Promise<WebhookState> {
-  const user = await requireUser();
+  const user = await requireAdmin(); // integração restrita a administradores
   const [cfg] = await db.select({ urlEnc: webhookIntegrations.urlEnc }).from(webhookIntegrations).where(eq(webhookIntegrations.userId, user.id));
   if (!cfg?.urlEnc) return { error: "Salve a URL antes de testar." };
 
@@ -94,7 +94,7 @@ export async function testWebhook(): Promise<WebhookState> {
 }
 
 export async function retryWebhook(formData: FormData) {
-  const user = await requireUser();
+  const user = await requireAdmin(); // integração restrita a administradores
   const id = uuidSchema.safeParse(formData.get("id"));
   if (!id.success) return;
   await retryDelivery(user.id, id.data); // só entregas do próprio usuário
@@ -102,7 +102,7 @@ export async function retryWebhook(formData: FormData) {
 }
 
 export async function removeWebhook() {
-  const user = await requireUser();
+  const user = await requireAdmin(); // integração restrita a administradores
   await db.delete(webhookIntegrations).where(eq(webhookIntegrations.userId, user.id));
   revalidatePath("/acompanhamento/n8n");
 }
