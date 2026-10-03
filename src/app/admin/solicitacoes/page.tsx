@@ -46,7 +46,8 @@ export default async function SolicitacoesPage() {
   return (
     <div className="flex flex-col gap-10">
       <section aria-labelledby="sol">
-        <h1 id="sol" className="mb-3 text-xl font-bold">Solicitações (suporte, privacidade e exclusão)</h1>
+        <h1 id="sol" className="mb-1 font-display text-4xl font-extrabold tracking-tight">Solicitações</h1>
+        <p className="mb-4 text-lg text-muted-foreground">Suporte, privacidade e exclusão de conta.</p>
         {requests.length === 0 ? (
           <p className="text-base text-muted-foreground">Nenhuma solicitação.</p>
         ) : (

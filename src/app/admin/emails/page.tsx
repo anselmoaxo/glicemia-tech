@@ -22,7 +22,7 @@ export default async function AdminEmailsPage({ searchParams }: PageProps<"/admi
   const [{ items, hasMore }, stats] = await Promise.all([listAllEmails(page), emailStats()]);
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold">E-mails (visão técnica)</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">E-mails</h1>
       <p className="text-base text-muted-foreground">
         Só metadados: tipo, motivo, destinatário mascarado, horários e status do provedor. O conteúdo das mensagens e dados de saúde não
         são guardados. Para receber &ldquo;entregue&rdquo;, &ldquo;rejeitado&rdquo; e &ldquo;atrasado&rdquo; automaticamente, configure o webhook do Resend

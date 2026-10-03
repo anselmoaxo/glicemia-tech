@@ -12,6 +12,7 @@ export default async function CadastroPage({ searchParams }: PageProps<"/cadastr
   await redirectIfSignedIn(next);
   return (
     <>
+      <h1 className="sr-only">Criar conta</h1>
       <SignupWizard next={safeNext(next)} siteKey={captchaEnabled() ? captchaSiteKey() : ""} verifyEmail={emailVerificationRequired()} />
       <p className="text-sm text-muted-foreground">
         Este app ajuda a organizar seu acompanhamento. Ele não faz diagnóstico, não sugere doses

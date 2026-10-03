@@ -12,7 +12,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps<"/admin/
 
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-3xl font-bold">Auditoria</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">Auditoria</h1>
       <p className="text-base text-muted-foreground">Ações administrativas registradas: quem fez, o quê e quando. Não guarda dados de saúde.</p>
       {items.length === 0 ? (
         <p className="text-base">Nenhuma ação registrada.</p>

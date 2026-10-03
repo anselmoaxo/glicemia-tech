@@ -25,7 +25,8 @@ export type DashboardProps = {
 const fmt = (n: number | null) => (n === null ? "—" : String(n));
 
 const tile =
-  "flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl border bg-card px-2 text-center text-base font-semibold transition-colors hover:bg-accent";
+  "flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl border bg-card px-2 text-center text-base font-semibold transition-colors hover:border-primary/40 hover:bg-secondary md:min-h-16 md:flex-row md:justify-start md:gap-3 md:px-4 md:text-lg";
+const chip = "grid size-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary";
 
 function Row({ icon: Icon, label, children }: { icon: typeof Pill; label: string; children: React.ReactNode }) {
   return (
@@ -48,9 +49,10 @@ export function DashboardView(p: DashboardProps) {
     <div className="flex flex-col gap-6">
       <header>
         <p className="text-base text-muted-foreground first-letter:uppercase">{p.todayLabel}</p>
-        <h1 className="text-4xl font-bold tracking-tight">Olá, {p.firstName}</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight">Olá, {p.firstName}</h1>
       </header>
 
+      <div className="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] md:items-stretch">
       {p.latest ? (
         <MeterPanel
           value={p.latest.value}
@@ -63,27 +65,30 @@ export function DashboardView(p: DashboardProps) {
         <EmptyMeterPanel href={p.hrefs.glucose} />
       )}
 
+      <div className="flex flex-col gap-3">
       <Link
         href={p.hrefs.glucose}
-        className="flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-primary px-6 text-xl font-bold text-primary-foreground transition-colors hover:bg-primary/90"
+        className="flex min-h-16 items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-500 px-6 text-xl font-bold text-primary-foreground shadow-lg shadow-brand-600/25 transition-colors hover:from-brand-600 hover:to-brand-600"
       >
         <Droplet aria-hidden className="size-6" />
         Registrar glicemia
       </Link>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 md:flex-1 md:grid-cols-1">
         <Link href={p.hrefs.meal} className={tile}>
-          <Utensils aria-hidden className="size-6 text-primary" />
+          <span aria-hidden className={chip}><Utensils className="size-5" /></span>
           Refeição
         </Link>
         <Link href={p.hrefs.medication} className={tile}>
-          <Pill aria-hidden className="size-6 text-primary" />
+          <span aria-hidden className={chip}><Pill className="size-5" /></span>
           Remédio
         </Link>
         <Link href={p.hrefs.insulin} className={tile}>
-          <Syringe aria-hidden className="size-6 text-primary" />
+          <span aria-hidden className={chip}><Syringe className="size-5" /></span>
           Insulina
         </Link>
+      </div>
+      </div>
       </div>
 
       {p.alerts.length > 0 && (

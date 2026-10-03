@@ -34,7 +34,7 @@ export default async function AdminUsuarioPage({ params }: PageProps<"/admin/usu
       </Link>
 
       <div>
-        <h1 className="text-3xl font-bold">{u.name}</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight">{u.name}</h1>
         <p className="break-all text-base text-muted-foreground">{u.email}</p>
         <p className="mt-2 flex flex-wrap gap-2">
           {u.suspendedAt ? (
