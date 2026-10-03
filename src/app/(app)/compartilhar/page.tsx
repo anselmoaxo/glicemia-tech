@@ -9,7 +9,7 @@ import { listFamilyMembers } from "@/lib/sharing/queries";
 import { majorityStatus } from "@/lib/sharing/rules";
 import { confirmMajorityReview } from "./actions";
 
-export const metadata: Metadata = { title: "Compartilhar" };
+export const metadata: Metadata = { title: "Quem vê meus dados" };
 
 export default async function CompartilharPage() {
   const user = await requireUser();
@@ -22,7 +22,7 @@ export default async function CompartilharPage() {
 
   return (
     <section className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold">Compartilhar com familiares</h1>
+      <h1 className="text-3xl font-bold">Quem vê meus dados</h1>
       {needsMajorityReview && (
         <form action={confirmMajorityReview} className="flex flex-col gap-3 rounded-2xl border-2 border-primary bg-card p-4 text-base">
           <h2 className="text-xl font-semibold">Você completou 18 anos</h2>

@@ -2,7 +2,6 @@ import "server-only";
 import { and, desc, eq, inArray, isNotNull, isNull, notExists } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
-import { hashToken } from "./tokens";
 import { familyMembers, sharingPermissions, users } from "@/db/schema";
 
 // Vínculos que o usuário criou (ele é o dono dos dados).
@@ -28,13 +27,20 @@ export async function listFamilyMembers(ownerId: string) {
   }));
 }
 
-// Pessoas que compartilharam dados com o usuário (titular suspenso não aparece: o acesso está bloqueado).
+// Menores de quem o usuário é responsável legal (titular suspenso não aparece: o acesso está bloqueado).
 export async function listSharedWithMe(viewerId: string) {
   return db
     .select({ ownerId: familyMembers.ownerId, ownerName: users.name, role: familyMembers.role })
     .from(familyMembers)
     .innerJoin(users, eq(users.id, familyMembers.ownerId))
-    .where(and(eq(familyMembers.memberUserId, viewerId), eq(familyMembers.status, "accepted"), isNull(users.suspendedAt)))
+    .where(
+      and(
+        eq(familyMembers.memberUserId, viewerId),
+        eq(familyMembers.status, "accepted"),
+        eq(familyMembers.role, "guardian"),
+        isNull(users.suspendedAt),
+      ),
+    )
     .orderBy(users.name);
 }
 
@@ -46,7 +52,7 @@ export async function getOwnerName(ownerId: string) {
 const owners = alias(users, "owners");
 
 /**
- * E-mails de familiares aceitos com acesso à glicemia (para alertas). Conta de familiar suspensa não recebe, e titular
+ * E-mails dos responsáveis legais com acesso à glicemia (para alertas). Conta de familiar suspensa não recebe, e titular
  * suspenso não gera aviso para ninguém (o acesso dos familiares já fica bloqueado).
  */
 export async function listGlucoseFamilyEmails(ownerId: string) {
@@ -59,20 +65,11 @@ export async function listGlucoseFamilyEmails(ownerId: string) {
       and(
         eq(familyMembers.ownerId, ownerId),
         eq(familyMembers.status, "accepted"),
+        eq(familyMembers.role, "guardian"),
         eq(sharingPermissions.module, "glucose"),
         isNull(users.suspendedAt),
         notExists(db.select({ id: owners.id }).from(owners).where(and(eq(owners.id, ownerId), isNotNull(owners.suspendedAt)))),
       ),
     );
   return rows.map((r) => r.email);
-}
-
-/** Convite pendente e não expirado correspondente ao token (ou null). */
-export async function getUsableInvite(token: string) {
-  const [invite] = await db
-    .select()
-    .from(familyMembers)
-    .where(eq(familyMembers.tokenHash, hashToken(token)));
-  if (!invite || invite.status !== "pending" || invite.inviteExpiresAt.getTime() <= Date.now()) return null;
-  return invite;
 }

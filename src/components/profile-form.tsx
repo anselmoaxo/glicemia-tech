@@ -81,7 +81,7 @@ export function ProfileForm(p: Props) {
         </label>
         <label className="flex min-h-12 items-center gap-3 text-base">
           <input type="checkbox" name="alertEmailFamily" defaultChecked={p.alertEmailFamily} className="size-6" />
-          Avisar familiares autorizados a ver minha glicemia
+          Avisar meu responsável legal (contas de menores de 18 anos)
         </label>
         <label className="flex min-h-12 items-start gap-3 text-base">
           <input type="checkbox" name="notificationDetails" defaultChecked={p.notificationDetails} className="mt-1 size-6" />

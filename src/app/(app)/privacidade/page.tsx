@@ -40,7 +40,7 @@ export default async function PrivacidadePage() {
       <div className="flex flex-col gap-2 text-base">
         <h2 className="text-xl font-semibold">Como tratamos seus dados</h2>
         <ul className="list-disc pl-6">
-          <li>Só você e os familiares que você convidar enxergam seus registros, e você revoga o acesso quando quiser.</li>
+          <li>Só você enxerga seus registros. Em contas de menores de 18 anos, o responsável legal também vê, somente para leitura.</li>
           <li>Os administradores do app veem apenas contagens e dados de conta, nunca suas medições.</li>
           <li>Ao excluir a conta em Perfil, seus dados são apagados definitivamente.</li>
         </ul>

@@ -1,15 +1,10 @@
 import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { familyMembers, profiles, sharingPermissions, users } from "@/db/schema";
-import { getMaxCompanions } from "@/lib/settings";
+import { familyMembers, profiles, users } from "@/db/schema";
 import { sharingEvent } from "./audit";
-import type { ShareModule } from "./modules";
-import { addDays, generateToken } from "./tokens";
 import {
-  INVITE_DAYS,
   isMinor,
-  occupiesSlot,
   sharingAuthority,
   type MemberRole,
   type SharingActor,
@@ -75,59 +70,6 @@ type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
 const NO_PERMISSION = "Você não tem permissão para alterar este compartilhamento.";
 
-/** Cria (ou renova) um convite. Um acesso já ativo não é reaberto: para mudar módulos use updateMemberModules. */
-export async function createInvite(
-  actor: { id: string; email: string },
-  ownerId: string,
-  input: { email: string; modules: ShareModule[] },
-): Promise<Result<{ token: string; ownerName: string; days: number }>> {
-  const ctx = await getSharingContext(actor.id, ownerId);
-  if (!ctx?.authority.canInvite) {
-    return { ok: false, error: ctx?.ownerIsMinor ? "Como o perfil é de menor de idade, só o responsável legal pode convidar." : NO_PERMISSION };
-  }
-  const email = input.email.trim().toLowerCase();
-  if (email === ctx.owner.email.toLowerCase()) return { ok: false, error: "Não é possível convidar o próprio titular do perfil." };
-  if (email === actor.email.toLowerCase()) return { ok: false, error: "Você não pode convidar a si mesmo." };
-
-  const members = await db
-    .select({ id: familyMembers.id, email: familyMembers.email, status: familyMembers.status, inviteExpiresAt: familyMembers.inviteExpiresAt })
-    .from(familyMembers)
-    .where(eq(familyMembers.ownerId, ownerId));
-  const existing = members.find((m) => m.email === email);
-  if (existing?.status === "accepted") {
-    return { ok: false, error: "Esta pessoa já tem acesso. Para mudar o que ela vê, use \"Alterar o que pode ver\"." };
-  }
-  const max = await getMaxCompanions();
-  const used = members.filter((m) => occupiesSlot(m) && m.id !== existing?.id).length;
-  if (used >= max) {
-    return {
-      ok: false,
-      error: `Limite de ${max} ${max === 1 ? "pessoa" : "pessoas"} com acesso a este perfil. Revogue um acesso ou cancele um convite pendente.`,
-    };
-  }
-
-  const { token, hash } = generateToken();
-  const id = existing?.id ?? crypto.randomUUID();
-  const reset = {
-    status: "pending",
-    role: "companion",
-    memberUserId: null,
-    acceptedAt: null,
-    revokedAt: null,
-    tokenHash: hash,
-    inviteExpiresAt: addDays(INVITE_DAYS),
-  };
-  await db.batch([
-    existing
-      ? db.update(familyMembers).set(reset).where(and(eq(familyMembers.id, id), eq(familyMembers.ownerId, ownerId)))
-      : db.insert(familyMembers).values({ id, ownerId, email, ...reset }),
-    db.delete(sharingPermissions).where(eq(sharingPermissions.familyMemberId, id)),
-    db.insert(sharingPermissions).values(input.modules.map((module) => ({ familyMemberId: id, module }))),
-    sharingEvent({ ownerId, actorId: actor.id, action: "invite", familyMemberId: id, memberEmail: email, modules: input.modules }),
-  ]);
-  return { ok: true, token, ownerName: ctx.owner.name, days: INVITE_DAYS };
-}
-
 async function getMember(ownerId: string, memberId: string) {
   const [row] = await db
     .select({ id: familyMembers.id, email: familyMembers.email, status: familyMembers.status, role: familyMembers.role })
@@ -136,22 +78,7 @@ async function getMember(ownerId: string, memberId: string) {
   return row ?? null;
 }
 
-/** Muda o que um acompanhante pode ver, sem derrubar o acesso. O responsável legal sempre vê tudo. */
-export async function updateMemberModules(actorId: string, ownerId: string, memberId: string, modules: ShareModule[]): Promise<Result> {
-  const ctx = await getSharingContext(actorId, ownerId);
-  if (!ctx?.authority.canEditPermissions) return { ok: false, error: NO_PERMISSION };
-  const member = await getMember(ownerId, memberId);
-  if (!member || member.status === "revoked") return { ok: false, error: "Vínculo não encontrado." };
-  if (member.role === "guardian") return { ok: false, error: "O responsável legal acompanha todos os registros do menor." };
-  await db.batch([
-    db.delete(sharingPermissions).where(eq(sharingPermissions.familyMemberId, member.id)),
-    db.insert(sharingPermissions).values(modules.map((module) => ({ familyMemberId: member.id, module }))),
-    sharingEvent({ ownerId, actorId, action: "permissions_change", familyMemberId: member.id, memberEmail: member.email, modules }),
-  ]);
-  return { ok: true };
-}
-
-/** Revoga um acesso ativo ou cancela um convite pendente. */
+/** Revoga um acesso ativo (ex.: o antigo responsável, depois dos 18 anos) ou cancela um convite pendente antigo. */
 export async function revokeMember(actorId: string, ownerId: string, memberId: string): Promise<Result> {
   const ctx = await getSharingContext(actorId, ownerId);
   const member = await getMember(ownerId, memberId);

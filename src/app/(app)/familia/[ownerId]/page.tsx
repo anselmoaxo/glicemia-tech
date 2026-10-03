@@ -84,14 +84,9 @@ export default async function FamiliaOwnerPage({ params }: PageProps<"/familia/[
           <h1 className="break-words text-3xl font-bold">{ownerName}</h1>
           <p className="text-base text-muted-foreground">Somente leitura · últimos registros</p>
           {isGuardian && (
-            <div className="mt-1 flex flex-col">
-              <a href={`/familia/${encodeURIComponent(ownerId)}/configuracoes`} className="flex min-h-12 items-center text-base font-semibold underline">
-                Configurar acompanhamento (responsável)
-              </a>
-              <a href={`/familia/${encodeURIComponent(ownerId)}/compartilhamento`} className="flex min-h-12 items-center text-base font-semibold underline">
-                Quem acompanha {ownerName} (responsável)
-              </a>
-            </div>
+            <a href={`/familia/${encodeURIComponent(ownerId)}/configuracoes`} className="mt-1 flex min-h-12 items-center text-base font-semibold underline">
+              Configurar acompanhamento (responsável)
+            </a>
           )}
         </div>
       </div>

@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { alertEmail, inviteEmail, resetPasswordEmail, twoFactorCodeEmail, verificationEmail } from "./email-templates";
+import { alertEmail, resetPasswordEmail, twoFactorCodeEmail, verificationEmail } from "./email-templates";
 
 const APP = "https://app.test";
 
 const all = () => [
   verificationEmail({ name: "Maria da Silva", url: `${APP}/api/auth/verify-email?token=abc&callbackURL=%2Fx`, appUrl: APP }),
   resetPasswordEmail({ name: "Maria da Silva", url: `${APP}/reset?token=xyz`, appUrl: APP }),
-  inviteEmail({ ownerName: "João", url: `${APP}/convite/t0k`, appUrl: APP, modules: ["Glicemia", "Insulina"] }),
   alertEmail({ value: 212, direction: "high", appUrl: APP, link: `${APP}/glicemia`, details: true }),
   alertEmail({ value: 54, direction: "low", appUrl: APP, ownerName: "João", link: `${APP}/familia/u1`, details: true }),
   twoFactorCodeEmail({ name: "Maria", code: "123456", appUrl: APP }),
@@ -27,9 +26,9 @@ describe("estrutura comum dos e-mails", () => {
   });
 
   it("mostra o endereço do botão por extenso (para quem não consegue tocar)", () => {
-    for (const m of [all()[0], all()[1], all()[2]]) {
+    for (const m of [all()[0], all()[1]]) {
       const hrefs = [...m.html.matchAll(/href="([^"]+)"/g)].map((x) => x[1]);
-      const link = hrefs.find((h) => h.includes("token") || h.includes("convite"))!;
+      const link = hrefs.find((h) => h.includes("token"))!;
       expect(m.html.split(link).length).toBeGreaterThan(2); // aparece no botão E no texto
       expect(m.text).toContain(link.replace(/&amp;/g, "&"));
     }
@@ -53,17 +52,8 @@ describe("conteúdo de cada e-mail", () => {
     expect(m.html).toMatch(/ignore esta mensagem/i);
   });
 
-  it("convite: quem convidou, o que poderá ver e a regra do mesmo e-mail", () => {
-    const m = all()[2];
-    expect(m.subject).toMatch(/João convidou/);
-    expect(m.html).toContain("Glicemia, Insulina");
-    expect(m.html).toMatch(/somente para leitura/);
-    expect(m.html).toMatch(/este mesmo e-mail/);
-    expect(m.html).toMatch(/7 dias/);
-  });
-
   it("alerta para a própria pessoa: valor em destaque, sentido da faixa e mensagem segura", () => {
-    const m = all()[3];
+    const m = all()[2];
     expect(m.subject).toMatch(/fora da faixa/);
     expect(m.html).toContain(">212<");
     expect(m.html).toContain("Acima da faixa");
@@ -74,7 +64,7 @@ describe("conteúdo de cada e-mail", () => {
   });
 
   it("alerta para familiar: traz o nome de quem registrou e o link da pessoa", () => {
-    const m = all()[4];
+    const m = all()[3];
     expect(m.subject).toBe("Aviso de glicemia de João");
     expect(m.html).toContain("Abaixo da faixa");
     expect(m.html).toContain("/familia/u1");
@@ -82,7 +72,7 @@ describe("conteúdo de cada e-mail", () => {
   });
 
   it("código de duas etapas: código grande, validade e aviso de nunca compartilhar", () => {
-    const m = all()[5];
+    const m = all()[4];
     expect(m.subject).toBe("Seu código de acesso: 123456");
     expect(m.html).toContain("123456");
     expect(m.html).toMatch(/3 minutos/);
@@ -117,8 +107,5 @@ describe("segurança dos modelos", () => {
     const m = resetPasswordEmail({ name: "A", url: "javascript:alert(1)", appUrl: APP });
     expect(m.html).not.toContain("javascript:");
     expect(m.html).toContain(`href="${APP}"`);
-    const n = inviteEmail({ ownerName: "<b>x</b>", url: `${APP}/c`, appUrl: APP, modules: ["<i>m</i>"] });
-    expect(n.html).not.toContain("<b>x</b>");
-    expect(n.html).not.toContain("<i>m</i>");
   });
 });

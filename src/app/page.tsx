@@ -39,7 +39,7 @@ const steps = [
     title: "Acompanhe",
     text: "Veja média, menor e maior valor e um gráfico de 7 a 90 dias, sempre comparados à faixa que você definiu.",
   },
-  { title: "Compartilhe", text: "Convide um familiar para acompanhar ou gere um link temporário para o médico." },
+  { title: "Compartilhe", text: "Gere um relatório ou um link temporário para o médico." },
 ];
 
 const features: { icon: LucideIcon; title: string; text: string }[] = [
@@ -72,8 +72,8 @@ const features: { icon: LucideIcon; title: string; text: string }[] = [
   },
   {
     icon: Users,
-    title: "Família e médico",
-    text: "Convide familiares (inclusive responsáveis por menores) e leve o relatório ou um link temporário ao seu médico.",
+    title: "Leve ao médico",
+    text: "Leve o relatório ou um link temporário ao seu médico, com validade e revogação quando quiser.",
   },
 ];
 
@@ -86,7 +86,6 @@ const readable: { icon: LucideIcon; text: string }[] = [
 
 const privacy = [
   "Cada pessoa só vê os próprios dados.",
-  "Familiares recebem acesso somente para leitura, você escolhe o que eles veem e consulta quem acessou.",
   "Links para o médico têm validade e você pode revogar quando quiser.",
   "Menores de 18 anos só usam o app com a confirmação de um responsável legal.",
   "Você exporta uma cópia dos seus dados e exclui a conta a qualquer momento.",

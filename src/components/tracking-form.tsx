@@ -131,7 +131,7 @@ export function TrackingForm(p: TrackingFormProps) {
         )}
         <label className={check}>
           <input type="checkbox" name="notifyFamily" defaultChecked={v.notifyFamily} className="size-6" />
-          Autorizo avisos para familiares ou acompanhantes que já têm acesso à glicemia
+          Autorizo avisos para o responsável legal (contas de menores de 18 anos)
         </label>
         {!p.emailAvailable && <p className="text-sm text-muted-foreground">O envio de e-mail não está configurado neste ambiente.</p>}
         <p className="text-sm text-muted-foreground">
