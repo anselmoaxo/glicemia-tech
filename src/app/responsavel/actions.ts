@@ -10,6 +10,7 @@ import { guardianEmail } from "@/lib/email-templates";
 import { env } from "@/lib/env";
 import { ageFromBirthDate } from "@/lib/profile-utils";
 import { requireUser } from "@/lib/session";
+import { sharingEvent } from "@/lib/sharing/audit";
 import { SHARE_MODULE_KEYS } from "@/lib/sharing/modules";
 import { addDays, generateToken, hashToken } from "@/lib/sharing/tokens";
 
@@ -76,6 +77,8 @@ export async function confirmGuardian(token: string, formData: FormData) {
   const linkId = existing?.id ?? crypto.randomUUID();
   const linkFields = {
     status: "accepted",
+    role: "guardian",
+    revokedAt: null,
     memberUserId: guardian.id,
     acceptedAt: new Date(),
     tokenHash: generateToken().hash,
@@ -91,6 +94,14 @@ export async function confirmGuardian(token: string, formData: FormData) {
       : db.insert(familyMembers).values({ id: linkId, ownerId: req.minorId, email: req.guardianEmail, ...linkFields }),
     db.delete(sharingPermissions).where(eq(sharingPermissions.familyMemberId, linkId)),
     db.insert(sharingPermissions).values(SHARE_MODULE_KEYS.map((module) => ({ familyMemberId: linkId, module }))),
+    sharingEvent({
+      ownerId: req.minorId,
+      actorId: guardian.id,
+      action: "guardian_confirm",
+      familyMemberId: linkId,
+      memberEmail: req.guardianEmail,
+      modules: [...SHARE_MODULE_KEYS],
+    }),
   ]);
   redirect("/familia");
 }

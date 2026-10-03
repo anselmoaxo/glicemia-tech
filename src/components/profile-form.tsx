@@ -20,6 +20,7 @@ type Props = {
   fontScale: number;
   alertEmailSelf: boolean;
   alertEmailFamily: boolean;
+  notificationDetails: boolean;
   trackingPurpose: string | null;
 };
 
@@ -55,7 +56,11 @@ export function ProfileForm(p: Props) {
           <option value="outro">Outra necessidade</option>
           <option value="sem_diabetes">Não tenho diabetes</option>
         </select>
-        <p className="text-sm text-muted-foreground">Informação sua, usada só para personalizar o app. Não é diagnóstico.</p>
+        <p className="text-sm text-muted-foreground">
+          Informação sua, usada só para personalizar o app. Não é diagnóstico. Com &quot;Não tenho diabetes&quot;, o app esconde
+          insulina e controles de tratamento, sem apagar nenhum registro; dá para mudar quando quiser. O app organiza registros
+          e não confirma nem descarta diagnóstico a partir de uma medição.
+        </p>
       </div>
       <p className="text-sm text-muted-foreground">
         Menores de 18 anos precisam da confirmação de um responsável legal, feita por e-mail (o app pede ao entrar).
@@ -78,6 +83,19 @@ export function ProfileForm(p: Props) {
           <input type="checkbox" name="alertEmailFamily" defaultChecked={p.alertEmailFamily} className="size-6" />
           Avisar familiares autorizados a ver minha glicemia
         </label>
+        <label className="flex min-h-12 items-start gap-3 text-base">
+          <input type="checkbox" name="notificationDetails" defaultChecked={p.notificationDetails} className="mt-1 size-6" />
+          <span>
+            Mostrar o valor da glicemia no e-mail de aviso
+            <span className="block text-sm text-muted-foreground">
+              Desligado, o e-mail diz só que há um novo aviso. O assunto e o começo do e-mail podem aparecer na tela bloqueada do
+              celular.
+            </span>
+          </span>
+        </label>
+        <p className="text-sm text-muted-foreground">
+          Avisos por e-mail podem atrasar ou não chegar. Não use o app como único meio de vigilância ou de emergência.
+        </p>
       </fieldset>
       {state.error && <p role="alert" className="text-base font-medium text-destructive">{state.error}</p>}
       {state.ok && <p role="status" className="text-base font-medium">Perfil salvo.</p>}

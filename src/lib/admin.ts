@@ -53,7 +53,7 @@ export async function requireOwner() {
 
 export type AdminAction =
   | "suspend" | "unsuspend" | "delete" | "request_update" | "link_revoke" | "professional_verify" | "professional_reject"
-  | "role_grant" | "role_revoke" | "verify_email" | "end_sessions";
+  | "role_grant" | "role_revoke" | "verify_email" | "end_sessions" | "setting_update";
 
 /** Trilha de auditoria: só ação, quem fez e o alvo (nunca dados de saúde). */
 export async function logAdminAction(adminId: string, action: AdminAction, targetEmail: string) {

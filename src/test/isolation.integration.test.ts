@@ -1,10 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 // Teste de integração: roda só com um banco de TESTE configurado (migrations aplicadas).
-//   TEST_DATABASE_URL=postgresql://... npm test
+//   TEST_DATABASE_URL=postgresql://... npm test          (Neon)
+//   TEST_LOCAL_PG_URL=postgres://... npm test            (Postgres local)
 // Nunca aponte para o banco de produção: o teste cria e apaga usuários próprios.
-const url = process.env.TEST_DATABASE_URL;
+const url = process.env.TEST_DATABASE_URL ?? process.env.TEST_LOCAL_PG_URL;
 if (url) process.env.DATABASE_URL = url;
+
+vi.mock("@/db", async (importOriginal) => {
+  const local = process.env.TEST_LOCAL_PG_URL;
+  if (!local || process.env.TEST_DATABASE_URL) return importOriginal();
+  const { createLocalDb } = await import("./local-db");
+  return { db: createLocalDb(local) };
+});
 
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("NOT_FOUND"); } }));
 

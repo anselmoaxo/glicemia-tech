@@ -56,7 +56,7 @@ export async function syncReadingAlert(owner: Owner, readingId: string, isNew: b
   const direction = status; // "low" | "high"
 
   if (profile.alertEmailSelf) {
-    const mail = alertEmail({ value: reading.value, direction, appUrl, link: `${appUrl}/glicemia` });
+    const mail = alertEmail({ value: reading.value, direction, appUrl, link: `${appUrl}/glicemia`, details: profile.notificationDetails });
     await log(
       "self",
       await sendEmail(owner.email, mail.subject, mail.html, mail.text, {
@@ -75,6 +75,8 @@ export async function syncReadingAlert(owner: Owner, readingId: string, isNew: b
       appUrl,
       ownerName: owner.name,
       link: `${appUrl}/familia/${owner.id}`,
+      // o titular decide se o valor aparece nos e-mails (inclusive nos enviados aos familiares)
+      details: profile.notificationDetails,
     });
     for (const to of await listGlucoseFamilyEmails(owner.id)) {
       await log(

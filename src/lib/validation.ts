@@ -75,5 +75,6 @@ export const profileSchema = healthFieldsSchema.extend({
   fontScale: z.coerce.number().int().min(100).max(150),
   alertEmailSelf: z.string().optional().transform((v) => v === "on"),
   alertEmailFamily: z.string().optional().transform((v) => v === "on"),
+  notificationDetails: z.string().optional().transform((v) => v === "on"),
   trackingPurpose: z.enum(["pessoal", "diabetes", "outro", "sem_diabetes"]).optional().catch(undefined),
 });

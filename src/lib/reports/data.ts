@@ -17,6 +17,7 @@ import { contextLabel } from "@/lib/glucose/contexts";
 import { getTargets } from "@/lib/glucose/queries";
 import { getTimezone } from "@/lib/profile";
 import { describePatient } from "@/lib/profile-utils";
+import { ALL_REPORT_SECTIONS, type ReportSections } from "@/lib/sharing/rules";
 import { computeStats } from "./stats";
 import type { ReportRange } from "./range";
 
@@ -25,8 +26,11 @@ const LIMIT = { readings: 2000, meals: 500, medications: 1500, insulin: 1000 };
 
 export type ReportData = Awaited<ReturnType<typeof getReportData>>;
 
-/** Reúne tudo que o relatório mostra. Sempre filtrado por userId. */
-export async function getReportData(userId: string, range: ReportRange) {
+/**
+ * Reúne tudo que o relatório mostra. Sempre filtrado por userId. `sections` limita o conteúdo ao que o leitor pode ver
+ * (acompanhante recebe só os módulos liberados); seção desligada nem é consultada.
+ */
+export async function getReportData(userId: string, range: ReportRange, sections: ReportSections = ALL_REPORT_SECTIONS) {
   const { from, to } = range;
   const [tz, [owner], targets, [profile]] = await Promise.all([
     getTimezone(userId),
@@ -44,7 +48,7 @@ export async function getReportData(userId: string, range: ReportRange) {
   ]);
 
   const [readingRows, mealRows, medRows, insulinRows] = await Promise.all([
-    db
+    !sections.glucose ? [] : db
       .select({
         value: glucoseReadings.valueMgDl,
         measuredAt: glucoseReadings.measuredAt,
@@ -59,13 +63,13 @@ export async function getReportData(userId: string, range: ReportRange) {
       .where(and(eq(glucoseReadings.userId, userId), gte(glucoseReadings.measuredAt, from), lt(glucoseReadings.measuredAt, to)))
       .orderBy(asc(glucoseReadings.measuredAt))
       .limit(LIMIT.readings),
-    db
+    !sections.meals ? [] : db
       .select({ mealType: meals.mealType, customType: meals.customType, eatenAt: meals.eatenAt, description: meals.description })
       .from(meals)
       .where(and(eq(meals.userId, userId), gte(meals.eatenAt, from), lt(meals.eatenAt, to)))
       .orderBy(asc(meals.eatenAt))
       .limit(LIMIT.meals),
-    db
+    !sections.medications ? [] : db
       .select({
         name: medications.name,
         dose: medications.dose,
@@ -78,7 +82,7 @@ export async function getReportData(userId: string, range: ReportRange) {
       .where(and(eq(medicationLogs.userId, userId), gte(medicationLogs.scheduledFor, from), lt(medicationLogs.scheduledFor, to)))
       .orderBy(asc(medicationLogs.scheduledFor))
       .limit(LIMIT.medications),
-    db
+    !sections.insulin ? [] : db
       .select({
         units: insulinLogs.units,
         appliedAt: insulinLogs.appliedAt,
@@ -111,5 +115,6 @@ export async function getReportData(userId: string, range: ReportRange) {
     meals: mealRows,
     medications: medRows,
     insulin: insulinRows,
+    sections,
   };
 }

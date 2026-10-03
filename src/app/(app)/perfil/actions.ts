@@ -16,20 +16,29 @@ export async function updateProfile(_: ProfileState, formData: FormData): Promis
   const parsed = profileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { name, phone, birthDate, sex, diabetesType, yearsWithDiabetes, fontScale, alertEmailSelf, alertEmailFamily, trackingPurpose } = parsed.data;
+  const { name, phone, birthDate, sex, diabetesType, yearsWithDiabetes, fontScale, alertEmailSelf, alertEmailFamily, notificationDetails, trackingPurpose } = parsed.data;
   const diagnosisYear = yearsToDiagnosisYear(yearsWithDiabetes);
+
+  const [current] = await db
+    .select({ g: profiles.guardianConsentAt, birthDate: profiles.birthDate })
+    .from(profiles)
+    .where(eq(profiles.userId, user.id));
+  // Menor com responsável confirmado não muda a própria data de nascimento (viraria "adulto" e passaria a controlar
+  // o compartilhamento sozinho). A correção é feita pelo suporte, a pedido do responsável.
+  if (current?.g && (ageFromBirthDate(current.birthDate) ?? 99) < 18 && birthDate !== current.birthDate) {
+    return { error: "Sua data de nascimento só pode ser corrigida pelo suporte, a pedido do seu responsável legal." };
+  }
 
   // Menor de 18 anos: a confirmação do responsável vem por e-mail (/responsavel); aqui só se preserva ou se zera.
   const isMinor = (ageFromBirthDate(birthDate) ?? 99) < 18;
-  const [current] = await db.select({ g: profiles.guardianConsentAt }).from(profiles).where(eq(profiles.userId, user.id));
   const guardianConsentAt = isMinor ? (current?.g ?? null) : null;
   await db.update(users).set({ name, updatedAt: new Date() }).where(eq(users.id, user.id));
   await db
     .insert(profiles)
-    .values({ userId: user.id, phone, birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily, trackingPurpose: trackingPurpose ?? null, guardianConsentAt })
+    .values({ userId: user.id, phone, birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily, notificationDetails, trackingPurpose: trackingPurpose ?? null, guardianConsentAt })
     .onConflictDoUpdate({
       target: profiles.userId,
-      set: { phone, birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily, trackingPurpose: trackingPurpose ?? null, guardianConsentAt, updatedAt: new Date() },
+      set: { phone, birthDate, sex, diabetesType, diagnosisYear, fontScale, alertEmailSelf, alertEmailFamily, notificationDetails, trackingPurpose: trackingPurpose ?? null, guardianConsentAt, updatedAt: new Date() },
     });
 
   revalidatePath("/", "layout");

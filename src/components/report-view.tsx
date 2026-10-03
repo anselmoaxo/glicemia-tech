@@ -36,11 +36,13 @@ export function ReportView({ data }: { data: ReportData }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard label="Média" value={show(stats.average)} hint={`${stats.count} medições`} />
-        <StatCard label="Menor valor" value={show(stats.lowest)} />
-        <StatCard label="Maior valor" value={show(stats.highest)} />
-      </div>
+      {data.sections.glucose && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard label="Média" value={show(stats.average)} hint={`${stats.count} medições`} />
+          <StatCard label="Menor valor" value={show(stats.lowest)} />
+          <StatCard label="Maior valor" value={show(stats.highest)} />
+        </div>
+      )}
 
       {points.length > 0 && (
         <GlucoseChart
@@ -51,6 +53,7 @@ export function ReportView({ data }: { data: ReportData }) {
         />
       )}
 
+      {data.sections.glucose && (
       <Section title="Medições de glicemia" empty={data.readings.length === 0}>
         <ul className="flex flex-col gap-2">
           {data.readings.map((r, i) => (
@@ -64,7 +67,9 @@ export function ReportView({ data }: { data: ReportData }) {
           ))}
         </ul>
       </Section>
+      )}
 
+      {data.sections.meals && (
       <Section title="Refeições" empty={data.meals.length === 0}>
         <ul className="flex flex-col gap-2">
           {data.meals.map((m, i) => (
@@ -75,7 +80,9 @@ export function ReportView({ data }: { data: ReportData }) {
           ))}
         </ul>
       </Section>
+      )}
 
+      {data.sections.medications && (
       <Section title="Medicamentos" empty={data.medications.length === 0}>
         <ul className="flex flex-col gap-2">
           {data.medications.map((m, i) => (
@@ -86,7 +93,9 @@ export function ReportView({ data }: { data: ReportData }) {
           ))}
         </ul>
       </Section>
+      )}
 
+      {data.sections.insulin && (
       <Section title="Insulina" empty={data.insulin.length === 0}>
         <ul className="flex flex-col gap-2">
           {data.insulin.map((l, i) => (
@@ -98,6 +107,7 @@ export function ReportView({ data }: { data: ReportData }) {
           ))}
         </ul>
       </Section>
+      )}
 
       <p className="text-sm text-muted-foreground">
         Faixas conforme metas configuradas pelo próprio paciente. Registros informados pelo usuário; não

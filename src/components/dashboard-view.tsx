@@ -101,6 +101,9 @@ export function DashboardView(p: DashboardProps) {
                 <li key={a.id}>{a.text}</li>
               ))}
             </ul>
+            <p className="mt-1 text-sm text-foreground/80">
+              Avisos para conferir a medição e seguir a orientação do seu profissional de saúde.
+            </p>
           </div>
         </section>
       )}

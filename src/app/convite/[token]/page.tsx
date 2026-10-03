@@ -38,9 +38,15 @@ export default async function ConvitePage({ params, searchParams }: PageProps<"/
             {await getOwnerName(invite.ownerId)} convidou você para acompanhar os registros de saúde
             dele(a), somente para leitura.
           </p>
+          <ul className="list-disc pl-5 text-base">
+            <li>Você verá só o que foi liberado, sem poder criar, editar ou excluir registros.</li>
+            <li>Os dados são pessoais e sensíveis: não repasse a outras pessoas.</li>
+            <li>O acesso pode ser revogado a qualquer momento por quem convidou.</li>
+            <li>Os dados aparecem quando são registrados no app. Não é monitoramento em tempo real nem serviço de emergência.</li>
+          </ul>
           {erro && (
             <p role="alert" className="text-base font-medium text-destructive">
-              Não foi possível aceitar. Entre com o mesmo e-mail que recebeu o convite.
+              Não foi possível aceitar. Entre com o mesmo e-mail que recebeu o convite e confirme esse e-mail antes de aceitar.
             </p>
           )}
           <Button type="submit" className="h-14 text-lg">Aceitar convite</Button>
